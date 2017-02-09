@@ -4,12 +4,37 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 
 using namespace std;
 using namespace crow;
 using JSON = nlohmann::json;
 
+
+string moveResponse(int dir) {
+	JSON move;
+	switch (dir) {
+	case NORTH: 
+		move["move"] = "north";
+		move["taunt"] = "THE NORTH REMEMBERS";
+		break;
+	case EAST: 
+		move["move"] = "east";
+		move["taunt"] = "TO THE EAST";
+		break;
+	case SOUTH: 
+		move["move"] = "south";
+		move["taunt"] = "SOUTH WHERE ITS WARM";
+		break;
+	case 
+		WEST: move["move"] = "west";
+		move["taunt"] = "WEST IS BEST";
+		break;
+	}
+
+	return move.dump();
+}
 
 string SnakeInfo() {
 	JSON info;
@@ -18,7 +43,7 @@ string SnakeInfo() {
 	return info.dump();
 }
 
-SimpleApp initSnakeApp(){
+SimpleApp initSnakeApp() {
 	SimpleApp app;
 
 	//INFO
@@ -30,7 +55,9 @@ SimpleApp initSnakeApp(){
 	CROW_ROUTE(app, "/start")
 	.methods("POST"_method)
 	([](const crow::request & req) {
-		return "START";
+		JSON taunt;
+		taunt["taunt"] = "Test Taunt";
+		return taunt.dump();
 	});
 
 	//MOVE
@@ -38,7 +65,8 @@ SimpleApp initSnakeApp(){
 	.methods("POST"_method)
 	([](const crow::request & req) {
 		GameInfo game = GameInfo(req.body);
-		return "MOVE";
+		int i = rand() % 4;
+		return moveResponse(i);
 	});
 
 
@@ -46,14 +74,18 @@ SimpleApp initSnakeApp(){
 	CROW_ROUTE(app, "/end")
 	.methods("POST"_method)
 	([](const crow::request & req) {
-		return "END";
+		return "{}";
 	});
 
 	return app;
 }
 
-int main()
+int main(int argc, char **argv)
 {	
+	int port = 7000;
+	if(argc == 2){
+		port = atoi(argv[1]);
+	}
 	SimpleApp app = initSnakeApp();
-	app.port(7000).multithreaded().run();
+	app.port(port).multithreaded().run();
 }
