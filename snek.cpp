@@ -12,6 +12,32 @@ using namespace crow;
 using JSON = nlohmann::json;
 
 
+extern string id = "0";
+
+int findBestMove(GameInfo game){
+	Snake snake;
+	for(auto s: game.snakes){
+		if(s.id.compare(game.id)){
+			snake = s;
+			break;
+		}
+	}
+
+	Point head = snake.coords[0];
+	vector<int> moves = {NORTH, SOUTH, EAST, WEST};
+	vector<int> posmoves = vector<int>();
+	for(auto m: moves){
+		Point p = head.addMove(m);
+		int status = game.board.getCoord(p);
+		if( status != WALL && status < 0){
+			posmoves.push_back(m);
+		}
+	}
+
+	return posmoves[0];
+}
+
+
 string moveResponse(int dir) {
 	JSON move;
 	switch (dir) {
@@ -27,12 +53,11 @@ string moveResponse(int dir) {
 		move["move"] = "south";
 		move["taunt"] = "SOUTH WHERE ITS WARM";
 		break;
-	case 
-		WEST: move["move"] = "west";
+	case WEST:
+		move["move"] = "west";
 		move["taunt"] = "WEST IS BEST";
 		break;
 	}
-
 	return move.dump();
 }
 
@@ -64,8 +89,8 @@ SimpleApp initSnakeApp() {
 	CROW_ROUTE(app, "/move")
 	.methods("POST"_method)
 	([](const crow::request & req) {
-		GameInfo game = GameInfo(req.body);
-		int i = rand() % 4;
+		GameInfo game = GameInfo(req.body, id);
+		int i = findBestMove(game);
 		return moveResponse(i);
 	});
 
@@ -83,8 +108,9 @@ SimpleApp initSnakeApp() {
 int main(int argc, char **argv)
 {	
 	int port = 7000;
-	if(argc == 2){
+	if(argc == 3){
 		port = atoi(argv[1]);
+		id = string(argv[2]);
 	}
 	SimpleApp app = initSnakeApp();
 	app.port(port).multithreaded().run();

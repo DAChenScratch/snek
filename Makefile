@@ -5,7 +5,7 @@ clean:
 	rm ./snek
 
 run: 
-	./snek 7000 & ./snek 8000 & ./snek 9000
+	./snek 7000 1 & ./snek 8000 2 & ./snek 9000 3
 
 kill:
 	killall snek
