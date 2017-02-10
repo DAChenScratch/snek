@@ -25,6 +25,11 @@ using JSON = nlohmann::json;
 #define FOOD -3 
 #define GOLD -4
 
+#define EAT 0
+#define ESCAPE 1
+#define HUNT 2
+
+
 class Point {
 public:
 	int x;
@@ -39,19 +44,22 @@ public:
 
 		switch (move) {
 		case NORTH: 
-			p.y++;
-			break;
-		case EAST: 
-			p.x--;
-			break;
-		case SOUTH: 
 			p.y--;
 			break;
-		case WEST:
+		case EAST: 
 			p.x++;
+			break;
+		case SOUTH: 
+			p.y++;
+			break;
+		case WEST:
+			p.x--;
 			break;
 		}
 		return p;
+	}
+	Point convert(){
+		return Point(x+1, y+1);
 	}
 };
 
@@ -94,10 +102,13 @@ public:
 	vector<Point> food;
 	vector<Point> walls;
 	vector<Point> gold;
+	Snake snake;
 	GameBoard board;
 	GameInfo(string body, string id);
+private:
 	int parseMode(string str);
 	void updateBoard();
+	void getMySnake();
 };
 
 GameBoard::GameBoard(){
@@ -106,10 +117,10 @@ GameBoard::GameBoard(){
 
 GameBoard::GameBoard(int width, int height){
 	board = vector<vector<int>>();
-	for(int i = 0; i < height + 1; i++){
+	for(int i = 0; i < height + 2; i++){
 		vector<int> tmp = vector<int>();
-		for(int j = 0; j < width + 1; j++){
-			if(i == 0 || i == height || j == 0 || j == width ){
+		for(int j = 0; j < width + 2; j++){
+			if(i == 0 || i == height + 1 || j == 0 || j == width + 1 ){
 				tmp.push_back(WALL);
 			}else{
 				tmp.push_back(EMPTY);
@@ -119,12 +130,9 @@ GameBoard::GameBoard(int width, int height){
 	}
 }
 int GameBoard::getCoord(Point p){
-	// +1 to account for outer wall
-	p.x++;
-	p.y++;
-	//assert((p.x > 0) && (p.x < board.size()));
-	//assert((p.y > 0) && (p.y < board[p.x].size()));
-	return board[p.x][p.y];
+	assert((p.y >= 0) && (p.y <= board.size()));
+	assert((p.x >= 0) && (p.x <= board[p.y].size()));
+	return board[p.y][p.x];
 }
 
 void GameBoard::print(){
@@ -151,7 +159,7 @@ Snake::Snake(JSON j){
 		gold = j["gold"];
 
 		for (auto p : j["coords"]) {
-			coords.push_back(Point(p[0], p[1]));
+			coords.push_back(Point(p[0], p[1]).convert());
 		}
 	}
 
@@ -165,8 +173,8 @@ int Snake::parseStatus(string str) {
 	return -1;
 }
 
-GameInfo::GameInfo(string body, string id) {
-	id = id;
+GameInfo::GameInfo(string body, string sid) {
+	id = sid;
 	JSON j = JSON::parse(body);
 	game = j["game"];
 	mode = parseMode(j["mode"]);
@@ -182,21 +190,23 @@ GameInfo::GameInfo(string body, string id) {
 
 	food = vector<Point>();
 	for (auto p : j["food"]) {
-		food.push_back(Point(p[0], p[1]));
+		food.push_back(Point(p[0], p[1]).convert());
 	}
 
 	walls = vector<Point>();
 	for (auto p : j["walls"]) {
-		walls.push_back(Point(p[0], p[1]));
+		walls.push_back(Point(p[0], p[1]).convert());
 	}
 
 	gold = vector<Point>();
 	for (auto p : j["gold"]) {
-		gold.push_back(Point(p[0], p[1]));
+		gold.push_back(Point(p[0], p[1]).convert());
 	}
 
 	updateBoard();
-	board.print();
+	//board.print();
+	getMySnake();
+	assert(!snake.id.compare(id));
 }
 
 int GameInfo::parseMode(string str) {
@@ -215,20 +225,29 @@ void GameInfo::updateBoard(){
 	int i = 0;
 	for(auto snake: snakes){
 		for(auto p: snake.coords){
-			board.board[p.x][p.y] = int(i);
+			board.board[p.y][p.x] = int(i);
 		}
 		i++;
 	}
 
 	for(auto p: food){
-		board.board[p.x][p.y] = FOOD;
+		board.board[p.y][p.x] = FOOD;
 	}
 
 	for(auto p: walls){
-		board.board[p.x][p.y] = WALL;
+		board.board[p.y][p.x] = WALL;
 	}
 
 	for(auto p: gold){
-		board.board[p.x][p.y] = GOLD;
+		board.board[p.y][p.x] = GOLD;
+	}
+}
+
+void GameInfo::getMySnake(){
+	for(auto s: snakes){
+		if(!s.id.compare(id)){
+			snake = s;
+			break;
+		}
 	}
 }

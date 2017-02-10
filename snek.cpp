@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <time.h>
 
 
 using namespace std;
@@ -12,18 +13,10 @@ using namespace crow;
 using JSON = nlohmann::json;
 
 
-extern string id = "0";
+extern string id = "1";
 
-int findBestMove(GameInfo game){
-	Snake snake;
-	for(auto s: game.snakes){
-		if(s.id.compare(game.id)){
-			snake = s;
-			break;
-		}
-	}
-
-	Point head = snake.coords[0];
+int findFallbackMove(GameInfo game){
+	Point head = game.snake.coords[0];
 	vector<int> moves = {NORTH, SOUTH, EAST, WEST};
 	vector<int> posmoves = vector<int>();
 	for(auto m: moves){
@@ -34,8 +27,20 @@ int findBestMove(GameInfo game){
 		}
 	}
 
-	return posmoves[0];
+	//prevent %0
+	int size = 4;
+	if(posmoves.size()){
+		size = posmoves.size();
+	}
+
+	return posmoves[rand() % size];
 }
+
+int decideState(GameInfo game){
+
+}
+
+
 
 
 string moveResponse(int dir) {
@@ -80,6 +85,7 @@ SimpleApp initSnakeApp() {
 	CROW_ROUTE(app, "/start")
 	.methods("POST"_method)
 	([](const crow::request & req) {
+		GameInfo game = GameInfo(req.body, id);
 		JSON taunt;
 		taunt["taunt"] = "Test Taunt";
 		return taunt.dump();
@@ -89,8 +95,11 @@ SimpleApp initSnakeApp() {
 	CROW_ROUTE(app, "/move")
 	.methods("POST"_method)
 	([](const crow::request & req) {
+		clock_t t = clock();
 		GameInfo game = GameInfo(req.body, id);
-		int i = findBestMove(game);
+		int i = findFallbackMove(game);
+		t = clock() - t;
+		cout << "Exec Move Time: " << ((float) t )/CLOCKS_PER_SEC << endl;
 		return moveResponse(i);
 	});
 
@@ -99,6 +108,7 @@ SimpleApp initSnakeApp() {
 	CROW_ROUTE(app, "/end")
 	.methods("POST"_method)
 	([](const crow::request & req) {
+		GameInfo game = GameInfo(req.body, id);
 		return "{}";
 	});
 
