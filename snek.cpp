@@ -8,53 +8,87 @@
 #include <time.h>
 
 
+
+
 using namespace std;
 using namespace crow;
 using JSON = nlohmann::json;
 
-
 extern string id = "1";
 
-int findFallbackMove(GameInfo game){
+int findFallbackMove(GameInfo game) {
 	Point head = game.snake.coords[0];
-	vector<int> moves = {NORTH, SOUTH, EAST, WEST};
 	vector<int> posmoves = vector<int>();
-	for(auto m: moves){
+	for (auto m : moveslist) {
 		Point p = head.addMove(m);
-		int status = game.board.getCoord(p);
-		if( status != WALL && status < 0){
+		if (game.board.isValid(p)) {
 			posmoves.push_back(m);
 		}
 	}
 
-	//prevent %0
-	int size = 4;
-	if(posmoves.size()){
-		size = posmoves.size();
+	//dead end
+	if (!posmoves.size()) {
+		return 0;
 	}
 
-	return posmoves[rand() % size];
-}
-
-int decideState(GameInfo game){
-
+	return posmoves[rand() % posmoves.size()];
 }
 
 
+
+int eat(GameInfo game) {
+	for(auto food: game.food){
+		vector<int> targets = {10};
+		Path path = game.breadthFirstSearch(food, targets, true);
+		/*
+		for(auto p: path.path){
+			cout << p.x << " " << p.y << "/";
+		}*/
+		cout << endl;
+	}
+
+	return findFallbackMove(game);
+}
+
+int executeState(GameInfo game, int state) {
+	switch (state) {
+	case EAT:
+		return eat(game);
+		break;
+	case FINDFOOD:
+		return findFallbackMove(game);
+		break;
+
+	case DEFAULT:
+		return findFallbackMove(game);
+		break;
+	}
+	return findFallbackMove(game);
+}
+
+int decideState(GameInfo game) {
+	if (game.snake.health < 101) {
+		return EAT;
+	}
+	if (game.snake.health < 100) {
+		return FINDFOOD;
+	}
+	return DEFAULT;
+}
 
 
 string moveResponse(int dir) {
 	JSON move;
 	switch (dir) {
-	case NORTH: 
+	case NORTH:
 		move["move"] = "north";
 		move["taunt"] = "THE NORTH REMEMBERS";
 		break;
-	case EAST: 
+	case EAST:
 		move["move"] = "east";
 		move["taunt"] = "TO THE EAST";
 		break;
-	case SOUTH: 
+	case SOUTH:
 		move["move"] = "south";
 		move["taunt"] = "SOUTH WHERE ITS WARM";
 		break;
@@ -97,10 +131,11 @@ SimpleApp initSnakeApp() {
 	([](const crow::request & req) {
 		clock_t t = clock();
 		GameInfo game = GameInfo(req.body, id);
-		int i = findFallbackMove(game);
+		int state = decideState(game);
+		int move =  executeState(game, state);
 		t = clock() - t;
-		cout << "Exec Move Time: " << ((float) t )/CLOCKS_PER_SEC << endl;
-		return moveResponse(i);
+		cout << "Exec Move Time: " << ((float) t ) / CLOCKS_PER_SEC << endl;
+		return moveResponse(move);
 	});
 
 
@@ -116,9 +151,9 @@ SimpleApp initSnakeApp() {
 }
 
 int main(int argc, char **argv)
-{	
+{
 	int port = 7000;
-	if(argc == 3){
+	if (argc == 3) {
 		port = atoi(argv[1]);
 		id = string(argv[2]);
 	}

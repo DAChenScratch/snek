@@ -4,12 +4,15 @@ default:
 clean:
 	rm ./snek
 
+run:
+	./snek 9001 1
+	
 runall:
 	./snek 9001 1 & ./snek 9002 2 & ./snek 9003 3 & ./snek 9004 4 & ./snek 9005 5 & ./snek 9006 6 & ./snek 9007 7 & ./snek 9008 8 & ./snek 9009 9 & ./snek 9010 10 & ./snek 9011 11 & ./snek 9012 12 
 
 
 run2: 
-	./snek 7000 1 & ./snek 8000 2 
+	./snek 9001 1 & ./snek 9002 2
 
 kill:
 	killall snek
