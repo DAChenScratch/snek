@@ -17,7 +17,7 @@ using JSON = nlohmann::json;
 extern string id = "1";
 
 int findFallbackMove(GameInfo game) {
-	Point head = game.snake.coords[0];
+	Point head = game.snake.getHead();
 	vector<int> posmoves = vector<int>();
 	for (auto m : moveslist) {
 		Point p = head.addMove(m);
@@ -37,14 +37,12 @@ int findFallbackMove(GameInfo game) {
 
 
 int eat(GameInfo game) {
-	for(auto food: game.food){
-		vector<int> targets = {10};
-		Path path = game.breadthFirstSearch(food, targets, true);
-		/*
-		for(auto p: path.path){
-			cout << p.x << " " << p.y << "/";
-		}*/
-		cout << endl;
+	Point head = game.snake.getHead();
+	Path path = game.breadthFirstSearch(head, {FOOD}, false);
+
+	// found path
+	if (path.path.size() > 1){
+		return path.getStepDir(0);
 	}
 
 	return findFallbackMove(game);
@@ -67,7 +65,7 @@ int executeState(GameInfo game, int state) {
 }
 
 int decideState(GameInfo game) {
-	if (game.snake.health < 101) {
+	if (game.snake.health < 30) {
 		return EAT;
 	}
 	if (game.snake.health < 100) {

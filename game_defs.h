@@ -50,6 +50,7 @@ public:
 	vector<Point> path;
 	int target;
 	Path();
+	int getStepDir(int step);
 };
 
 
@@ -326,44 +327,40 @@ Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 
 	Point parent[board.board.size()][board.board[0].size()];
 
-	Point p = start;
-	q.push(p);
+	Point curpoint = start;
+	q.push(curpoint);
 
 	int depth = 0;
 
 	while (!q.empty()) {
-		p = q.front();
+		curpoint = q.front();
 		q.pop();
 
-		vector<Point> points = p.expand();
+		vector<Point> points = curpoint.expand();
 		for (auto point : points) {
 			if (!board.isVisited(point) && board.isValid(point)) {
-				parent[point.y][point.x] = p;
+				parent[point.y][point.x] = curpoint;
 				q.push(point);
 				board.markVisited(point);
-			}
 
-			for(auto target: targets){
-				if (/*(!geq && (board.getCoord(point) == target)) || */(geq && (board.getCoord(point) >= target))) {
-					Path path = Path();
-					path.target = target;
+				for(auto target: targets){
+					if ((!geq && (board.getCoord(point) == target)) || (geq && (board.getCoord(point) >= target))) {
+						Path path = Path();
+						path.target = target;
 
-					Point par = parent[point.y][point.x];
-					cout << "Found Snake: " << target << " " << point.x << " " << point.y << " " << endl;
-					//cout << par.x << " " << par.y << " " << endl;
-					//cout << start.x << " " << start.y << " " << endl;
-					cout << "Queue size: " << q.size() << endl;
+						int loop = 0;
+						//walk path
+						while(start.x != point.x || start.y != point.y ){
+							path.path.insert(path.path.begin(), point);
+							point = parent[point.y][point.x];
 
-					/*
-					//walk path
-					while(start.x != point.x && start.y != point.y ){
-						path.path.insert(path.path.begin(), point);
-						point = parent[point.y][point.x];
+							loop++;
+							assert(loop < ((height + 2) * (width + 2)));
+						}
+						path.path.insert(path.path.begin(), start);
+
+						return path;
 					}
-					path.path.insert(path.path.begin(), point);
-					*/
-
-					return path;
 				}
 			}
 		
@@ -374,11 +371,31 @@ Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 		assert(depth < ((height + 2) * (width + 2)));
 	}
 
-	//TODO fix
 	return Path();
 }
 
 Path::Path(){
 	path = vector<Point>();
 	target = EMPTY;
+}
+
+int Path::getStepDir(int step){
+	assert(step >= 0 && step < path.size() - 1);
+	Point one = path[step];
+	Point two = path[step + 1]; 
+
+	int x = two.x - one.x;
+	int y = two.y - one.y;
+
+	assert(x != 0 || y != 0);
+
+	if(y == -1){
+		return NORTH;
+	}else if (y == 1){
+		return SOUTH;
+	}else if (x == 1){
+		return EAST;
+	}
+
+	return WEST;
 }
