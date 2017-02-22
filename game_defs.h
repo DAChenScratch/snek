@@ -72,34 +72,25 @@ class Snake {
 public:
 	string id;
 	string name;
-	int status;
-	int age;
 	int health;
 	vector<Point> coords;
-	int kills;
-	int food;
-	int gold;
 	Snake();
 	Snake(JSON j);
-	int parseStatus(string str);
 	Point getHead();
 };
 
 class GameInfo {
 public:
 	string id;
-	string game;
-	int mode;
+	string game_id;
 	int turn;
 	int height;
 	int width;
 	vector<Snake> snakes;
 	vector<Point> food;
-	vector<Point> walls;
-	vector<Point> gold;
 	Snake snake;
 	GameBoard board;
-	GameInfo(string body, string id);
+	GameInfo(string body);
 	Path breadthFirstSearch(Point start, vector<int> targets, bool geq);
 private:
 	int parseMode(string str);
@@ -212,26 +203,10 @@ Snake::Snake() {
 Snake::Snake(JSON j) {
 	id = j["id"];
 	name = j["name"];
-	status = parseStatus(j["status"]);
-	age = j["age"];
-	health = j["health"];
-	kills = j["kills"];
-	food = j["food"];
-	gold = j["gold"];
-
+	health = j["health_points"];
 	for (auto p : j["coords"]) {
 		coords.push_back(Point(p[0], p[1]).convert());
 	}
-}
-
-int Snake::parseStatus(string str) {
-	if (!str.compare("alive")) {
-		return ALIVE;
-	}
-	if (!str.compare("dead")) {
-		return DEAD;
-	}
-	return -1;
 }
 
 Point Snake::getHead() {
@@ -239,11 +214,10 @@ Point Snake::getHead() {
 	return coords[0];
 }
 
-GameInfo::GameInfo(string body, string sid) {
-	id = sid;
+GameInfo::GameInfo(string body) {
 	JSON j = JSON::parse(body);
-	game = j["game"];
-	mode = parseMode(j["mode"]);
+	id = j["you"];
+	game_id = j["game_id"];
 	turn = j["turn"];
 	height = j["height"];
 	width = j["width"];
@@ -257,16 +231,6 @@ GameInfo::GameInfo(string body, string sid) {
 	food = vector<Point>();
 	for (auto p : j["food"]) {
 		food.push_back(Point(p[0], p[1]).convert());
-	}
-
-	walls = vector<Point>();
-	for (auto p : j["walls"]) {
-		walls.push_back(Point(p[0], p[1]).convert());
-	}
-
-	gold = vector<Point>();
-	for (auto p : j["gold"]) {
-		gold.push_back(Point(p[0], p[1]).convert());
 	}
 
 	updateBoard();
@@ -301,14 +265,6 @@ void GameInfo::updateBoard() {
 	for (auto p : food) {
 		board.board[p.y][p.x] = FOOD;
 	}
-
-	for (auto p : walls) {
-		board.board[p.y][p.x] = WALL;
-	}
-
-	for (auto p : gold) {
-		board.board[p.y][p.x] = GOLD;
-	}
 }
 
 void GameInfo::getMySnake() {
@@ -320,8 +276,6 @@ void GameInfo::getMySnake() {
 	}
 }
 
-
-//
 Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 	queue<Point> q = queue<Point>();
 

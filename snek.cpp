@@ -14,8 +14,6 @@ using namespace std;
 using namespace crow;
 using JSON = nlohmann::json;
 
-extern string id = "1";
-
 int findFallbackMove(GameInfo game) {
 	Point head = game.snake.getHead();
 	vector<int> posmoves = vector<int>();
@@ -79,19 +77,19 @@ string moveResponse(int dir) {
 	JSON move;
 	switch (dir) {
 	case NORTH:
-		move["move"] = "north";
+		move["move"] = "up";
 		move["taunt"] = "THE NORTH REMEMBERS";
 		break;
 	case EAST:
-		move["move"] = "east";
+		move["move"] = "right";
 		move["taunt"] = "TO THE EAST";
 		break;
 	case SOUTH:
-		move["move"] = "south";
+		move["move"] = "down";
 		move["taunt"] = "SOUTH WHERE ITS WARM";
 		break;
 	case WEST:
-		move["move"] = "west";
+		move["move"] = "left";
 		move["taunt"] = "WEST IS BEST";
 		break;
 	}
@@ -101,7 +99,9 @@ string moveResponse(int dir) {
 string SnakeInfo() {
 	JSON info;
 	info["color"] = "#FF0000";
-	info["head"] = "";
+	info["head_url"] = "http://www.matagot.com/IMG/cache-20x20/arton27-20x20.jpg";
+	info["taunt"] = "Test Taunt";
+	info["name"] = "name";
 	return info.dump();
 }
 
@@ -113,14 +113,12 @@ SimpleApp initSnakeApp() {
 		return SnakeInfo();
 	});
 
+
 	//START
 	CROW_ROUTE(app, "/start")
 	.methods("POST"_method)
 	([](const crow::request & req) {
-		GameInfo game = GameInfo(req.body, id);
-		JSON taunt;
-		taunt["taunt"] = "Test Taunt";
-		return taunt.dump();
+		return SnakeInfo();
 	});
 
 	//MOVE
@@ -128,21 +126,13 @@ SimpleApp initSnakeApp() {
 	.methods("POST"_method)
 	([](const crow::request & req) {
 		clock_t t = clock();
-		GameInfo game = GameInfo(req.body, id);
+		GameInfo game = GameInfo(req.body);
 		int state = decideState(game);
 		int move =  executeState(game, state);
 		t = clock() - t;
-		cout << "Exec Move Time: " << ((float) t ) / CLOCKS_PER_SEC << endl;
+		cout << "Exec Move Time: " << ((float) t ) / CLOCKS_PER_SEC << endl; 
+		cout << moveResponse(move);
 		return moveResponse(move);
-	});
-
-
-	//END
-	CROW_ROUTE(app, "/end")
-	.methods("POST"_method)
-	([](const crow::request & req) {
-		GameInfo game = GameInfo(req.body, id);
-		return "{}";
 	});
 
 	return app;
@@ -151,9 +141,8 @@ SimpleApp initSnakeApp() {
 int main(int argc, char **argv)
 {
 	int port = 7000;
-	if (argc == 3) {
+	if (argc == 2) {
 		port = atoi(argv[1]);
-		id = string(argv[2]);
 	}
 	SimpleApp app = initSnakeApp();
 	app.port(port).multithreaded().run();
