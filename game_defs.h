@@ -31,6 +31,7 @@ const vector<int> moveslist = {NORTH, SOUTH, EAST, WEST};
 #define DEFAULT 0
 #define EAT 1
 #define FINDFOOD 2
+#define ORBIT 3
 
 
 
@@ -42,6 +43,7 @@ public:
 	Point(int x1, int y1);
 	Point addMove(int move);
 	Point convert();
+	float distance(Point p);
 	vector<Point> expand();
 };
 
@@ -77,6 +79,7 @@ public:
 	Snake();
 	Snake(JSON j);
 	Point getHead();
+	Point getTail();
 };
 
 class GameInfo {
@@ -92,6 +95,7 @@ public:
 	GameBoard board;
 	GameInfo(string body);
 	Path breadthFirstSearch(Point start, vector<int> targets, bool geq);
+	Path astarGraphSearch(Point start, Point end);
 private:
 	int parseMode(string str);
 	void updateBoard();
@@ -133,8 +137,13 @@ Point Point::addMove(int move) {
 	}
 	return p;
 }
+
 Point Point::convert() {
 	return Point(x + 1, y + 1);
+}
+
+float Point::distance(Point p){
+	return sqrt(pow(x - p.x, 2) + pow(y - p.y, 2));
 }
 
 vector<Point> Point::expand() {
@@ -212,6 +221,11 @@ Snake::Snake(JSON j) {
 Point Snake::getHead() {
 	assert(coords.size() > 0);
 	return coords[0];
+}
+
+Point Snake::getTail(){
+	assert(coords.size() > 0);
+	return coords.back();
 }
 
 GameInfo::GameInfo(string body) {
@@ -327,6 +341,78 @@ Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 
 	return Path();
 }
+
+
+class Node{
+public:
+	Node* parent;
+	Point point;
+	float f;
+	float g;
+	float h;
+	Node();
+	Node(Point p);
+	vector<Node> expand(Point target);
+};
+
+Node::Node(){
+	Node* parent = NULL;
+	point = Point();
+	f = 0;
+	g = 0;
+	h = 0;
+}
+
+Node::Node(Point p){
+	Node* parent = NULL;
+	point = p;
+	f = 0;
+	g = 0;
+	h = 0;
+}
+
+
+bool compareF(const Node& a, const Node& b){
+	return a.f < b.f;
+}
+
+
+vector<Node> Node::expand(Point target){
+	vector<Node> nodes;
+	vector<Point> points = point.expand();
+	for(auto p: points){
+		Node node;
+		node.parent = this;
+		node.g = g + 1;
+		node.h = p.distance(target);
+		node.f = node.g + node.h;
+		nodes.push_back(node);
+	}
+	return nodes;
+}
+
+Path GameInfo::astarGraphSearch(Point start, Point end){
+	Path path = Path();
+	Node first = Node(start);
+
+
+
+	vector<Node> open;
+	vector<Node> closed;
+	open.push_back(first);
+
+
+	//while(!open.empty()){
+		Node least = *min_element(open.begin() , open.end(), compareF);
+		cout << least.f << endl;
+		cout << least.g << endl;
+		cout << least.h << endl;
+
+	//}
+
+	return path;
+}
+
 
 Path::Path(){
 	path = vector<Point>();

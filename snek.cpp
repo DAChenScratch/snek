@@ -32,8 +32,6 @@ int findFallbackMove(GameInfo game) {
 	return posmoves[rand() % posmoves.size()];
 }
 
-
-
 int eat(GameInfo game) {
 	Point head = game.snake.getHead();
 	Path path = game.breadthFirstSearch(head, {FOOD}, false);
@@ -42,6 +40,16 @@ int eat(GameInfo game) {
 	if (path.path.size() > 1){
 		return path.getStepDir(0);
 	}
+
+	return findFallbackMove(game);
+}
+
+int orbit(GameInfo game){
+	Point head = game.snake.getHead();
+	Point tail = game.snake.getTail();
+
+	Path path = game.astarGraphSearch(head, tail);
+
 
 	return findFallbackMove(game);
 }
@@ -55,6 +63,10 @@ int executeState(GameInfo game, int state) {
 		return findFallbackMove(game);
 		break;
 
+	case ORBIT:
+		return orbit(game);
+		break;
+
 	case DEFAULT:
 		return findFallbackMove(game);
 		break;
@@ -66,6 +78,10 @@ int decideState(GameInfo game) {
 	if (game.snake.health < 30) {
 		return EAT;
 	}
+	if (game.snake.health < 100) {
+		return ORBIT;
+	}
+
 	if (game.snake.health < 100) {
 		return FINDFOOD;
 	}
