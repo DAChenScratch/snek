@@ -15,17 +15,29 @@ using namespace crow;
 using JSON = nlohmann::json;
 
 int findFallbackMove(GameInfo game) {
+	profile prof(__FUNCTION__, __LINE__);
+	cout << "FALL BACK MOVE" << endl;
 	Point head = game.snake.getHead();
+
 	vector<int> posmoves = vector<int>();
 	for (auto m : moveslist) {
 		Point p = head.addMove(m);
+
+		//if we can move into tail
+		if(p.compare(game.snake.getTail()) && game.snake.coords.size() > 3){
+			return m;
+		}
+
 		if (game.board.isValid(p)) {
 			posmoves.push_back(m);
 		}
 	}
 
+
+	/*
 	//dead end go into snake BUFFER
 	if (!posmoves.size()) {
+		cout << "BUFFER" << endl;
 		for (auto m : moveslist) {	
 			Point p = head.addMove(m);
 			if (game.board.getCoord(p) == BUFFER) {
@@ -34,8 +46,21 @@ int findFallbackMove(GameInfo game) {
 		}
 	}
 
+	//try to go into wall 
+	if (!posmoves.size()) {
+		cout << "WALL" << endl;
+		for (auto m : moveslist) {	
+			Point p = head.addMove(m);
+			if (game.board.getCoord(p) == WALL) {
+				posmoves.push_back(m);
+			}
+		}
+	}
+	*/
+
 	//else we are fucked anyways yolo
 	if (!posmoves.size()) {
+		cout << "WE FUCKED" << endl;
 		return 0;
 	}
 
@@ -58,7 +83,7 @@ int orbit(GameInfo game){
 	Point head = game.snake.getHead();
 	Point tail = game.snake.getTail();
 	Path path = game.astarGraphSearch(head, tail);
-	if(path.path.size() > 2 ){
+	if(path.path.size() > 1 && game.snake.coords.size() > 3){
 		return path.getStepDir(0);
 	}
 	return findFallbackMove(game);
@@ -88,12 +113,8 @@ int decideState(GameInfo game) {
 	if (game.snake.health < 30) {
 		return EAT;
 	}
-	if (game.snake.health < 100) {
+	if (game.snake.health < 101) {
 		return ORBIT;
-	}
-
-	if (game.snake.health < 100) {
-		return FINDFOOD;
 	}
 	return DEFAULT;
 }
@@ -157,7 +178,6 @@ SimpleApp initSnakeApp() {
 		int move =  executeState(game, state);
 		t = clock() - t;
 		cout << "Exec Move Time: " << ((float) t ) / CLOCKS_PER_SEC << endl; 
-		cout << moveResponse(move);
 		return moveResponse(move);
 	});
 

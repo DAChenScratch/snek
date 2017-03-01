@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <queue>
 #include <stack>
+#include <time.h>
 
 using namespace std;
 using namespace crow;
@@ -35,7 +36,28 @@ const vector<int> moveslist = {NORTH, SOUTH, EAST, WEST};
 #define FINDFOOD 2
 #define ORBIT 3
 
+#define ASTARTIMEOUT 50
 
+
+class profile{
+public:
+	const char* fname;
+	int line;
+	clock_t t;
+	profile(const char* fn, int l);
+	~profile();
+};
+
+profile::profile(const char* fn, int l){
+	t = clock();
+	fname = fn;
+	line = l;
+
+}
+
+profile::~profile(){
+	cout << fname << " executed in " << ((float) clock() -  t ) / CLOCKS_PER_SEC << endl;
+}
 
 class Point {
 public:
@@ -273,10 +295,10 @@ GameInfo::GameInfo(string body) {
 	cout << "DEADPOINTS: " << deadpoints.size() << endl;
 
 	for(auto p: deadpoints){
-		board.board[p.y][p.x] = WALL;
+		board.board[p.y][p.x] = BUFFER;
 	}
 
-	board.print();
+	//board.print();
 	assert(!snake.id.compare(id));
 }
 
@@ -334,6 +356,7 @@ void GameInfo::addSnakeWall(){
 
 
 vector<Point> GameInfo::fillDeadEnds(Point start){
+	profile prof(__FUNCTION__, __LINE__);
 	vector<Point> deadpoints = vector<Point>();
 	queue<Point> q = queue<Point>();
 	vector<vector<Point>> parent(board.board.size(), vector<Point>(board.board[0].size()));
@@ -351,7 +374,7 @@ vector<Point> GameInfo::fillDeadEnds(Point start){
 		valids[curpoint.y][curpoint.x] =  0;
 
 		for (auto point : points) {
-			if(board.isValid(point) || point.compare(snake.getHead()) || point.compare(snake.getTail())){
+			if(board.isValid(point) || point.compare(snake.getTail())){
 				valids[curpoint.y][curpoint.x]++;
 				if (!board.isVisited(point) && board.isValid(point)){
 					parent[point.y][point.x] = curpoint;
@@ -385,6 +408,7 @@ vector<Point> GameInfo::fillDeadEnds(Point start){
 
 
 Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
+	profile prof(__FUNCTION__, __LINE__);
 	queue<Point> q = queue<Point>();
 
 	vector<vector<Point>> parent(board.board.size(), vector<Point>(board.board[0].size()));
@@ -501,15 +525,17 @@ vector<Node> Node::expand(Point target){
 	return nodes;
 }
 
+
+
+
 Path GameInfo::astarGraphSearch(Point start, Point end){
+	profile prof(__FUNCTION__, __LINE__);
 	Path path = Path();
 	Node first = Node(start);
-
 	vector<Node> open;
 	vector<Node> closed;
 	open.push_back(first);
 
-	int loop = 0;
 	while(!open.empty()){
 		auto it = min_element(open.begin() , open.end(), compareF);
 		Node best = *it;
@@ -519,6 +545,7 @@ Path GameInfo::astarGraphSearch(Point start, Point end){
 		for(auto node: exp){
 			if(node.point.compare(end)){
 				path.path = node.path;
+				cout << "A* path found and size is " << path.path.size() << endl;
 				return path;
 			}	
 
@@ -530,15 +557,15 @@ Path GameInfo::astarGraphSearch(Point start, Point end){
 		}
 
 		closed.push_back(end);
-		loop++;
-		if(loop > 1000000){
-			cout << "AStar Error!" << endl;
-			cout << "Open size: " << open.size() << endl;
 
-
-			assert(loop < (width + 2) * (height + 2));
+		///timeout a* 
+		if(((float) clock() - t) / CLOCKS_PER_SEC * 1000 > ASTARTIMEOUT){
+			cout << "AStar Timeout" << endl;
+			return Path();
 		}
 	}
+
+	cout << "Astar Did not find a path" << endl;
 
 	return path;
 }
