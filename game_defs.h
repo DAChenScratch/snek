@@ -28,6 +28,7 @@ const vector<int> moveslist = {NORTH, SOUTH, EAST, WEST};
 #define WALL -2
 #define FOOD -3
 #define GOLD -4
+#define BUFFER -5
 
 #define DEFAULT 0
 #define EAT 1
@@ -97,6 +98,7 @@ public:
 	Snake snake;
 	GameBoard board;
 	GameInfo(string body);
+	void addSnakeWall();
 	Path breadthFirstSearch(Point start, vector<int> targets, bool geq);
 	Path astarGraphSearch(Point start, Point end);
 	vector<Point> fillDeadEnds(Point start);
@@ -195,7 +197,7 @@ bool GameBoard::isValid(Point p) {
 	if (!((p.x >= 0) && (p.x <= board[p.y].size()))) {
 		return false;
 	}
-	return board[p.y][p.x] != WALL && board[p.y][p.x] < 0;
+	return board[p.y][p.x] != WALL && board[p.y][p.x] != BUFFER && board[p.y][p.x] < 0;
 }
 
 void GameBoard::print() {
@@ -263,8 +265,9 @@ GameInfo::GameInfo(string body) {
 	}
 
 	updateBoard();
-	//board.print();
 	getMySnake();
+	addSnakeWall();
+
 
 	vector<Point> deadpoints = fillDeadEnds(snake.getHead());
 	cout << "DEADPOINTS: " << deadpoints.size() << endl;
@@ -273,7 +276,7 @@ GameInfo::GameInfo(string body) {
 		board.board[p.y][p.x] = WALL;
 	}
 
-
+	board.print();
 	assert(!snake.id.compare(id));
 }
 
@@ -314,20 +317,35 @@ void GameInfo::getMySnake() {
 	}
 }
 
+void GameInfo::addSnakeWall(){
+	for(auto s : snakes){
+		if(s.id.compare(id)){
+			if(s.coords.size() >= snake.coords.size()){
+				vector<Point> exp = s.getHead().expand();
+				for(auto p : exp){
+					if(board.getCoord(p) < 0){
+						board.board[p.y][p.x] = BUFFER;
+					}
+				} 
+			}
+		}
+	}
+}
+
 
 vector<Point> GameInfo::fillDeadEnds(Point start){
 	vector<Point> deadpoints = vector<Point>();
-	stack<Point> st = stack<Point>();
-	Point parent[board.board.size()][board.board[0].size()];
-	int valids[board.board.size()][board.board[0].size()];
+	queue<Point> q = queue<Point>();
+	vector<vector<Point>> parent(board.board.size(), vector<Point>(board.board[0].size()));
+	vector<vector<int>> valids(board.board.size(), vector<int>(board.board[0].size()));
 
 	Point curpoint = start;
-	st.push(curpoint);
+	q.push(curpoint);
 
 	int depth = 0;
-	while (!st.empty()) {
-		curpoint = st.top();
-		st.pop();
+	while (!q.empty()) {
+		curpoint = q.front();
+		q.pop();
 
 		vector<Point> points = curpoint.expand();
 		valids[curpoint.y][curpoint.x] =  0;
@@ -335,15 +353,13 @@ vector<Point> GameInfo::fillDeadEnds(Point start){
 		for (auto point : points) {
 			if(board.isValid(point) || point.compare(snake.getHead()) || point.compare(snake.getTail())){
 				valids[curpoint.y][curpoint.x]++;
-				if (!board.isVisited(point)) {
+				if (!board.isVisited(point) && board.isValid(point)){
 					parent[point.y][point.x] = curpoint;
-					st.push(point);
-					board.markVisited(point);
+					q.push(point);
 				}
 			}
-		
+			board.markVisited(point);
 		}
-
 		
 		//cout << valid.size() << endl;
 		if(valids[curpoint.y][curpoint.x] == 1){
@@ -359,10 +375,9 @@ vector<Point> GameInfo::fillDeadEnds(Point start){
 			}
 		}
 
-		
 		depth++;
 		//Crash if loop
-		assert(depth < ((height + 2) * (width + 2)));
+		if(depth < ((height + 2) * (width + 2)));
 	}
 	board.clearVisited();
 	return deadpoints;
@@ -372,7 +387,7 @@ vector<Point> GameInfo::fillDeadEnds(Point start){
 Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 	queue<Point> q = queue<Point>();
 
-	Point parent[board.board.size()][board.board[0].size()];
+	vector<vector<Point>> parent(board.board.size(), vector<Point>(board.board[0].size()));
 
 	Point curpoint = start;
 	q.push(curpoint);
@@ -516,7 +531,13 @@ Path GameInfo::astarGraphSearch(Point start, Point end){
 
 		closed.push_back(end);
 		loop++;
-		assert(loop < (width + 2) * (height + 2));
+		if(loop > 1000000){
+			cout << "AStar Error!" << endl;
+			cout << "Open size: " << open.size() << endl;
+
+
+			assert(loop < (width + 2) * (height + 2));
+		}
 	}
 
 	return path;

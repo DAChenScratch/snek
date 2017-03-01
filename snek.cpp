@@ -24,7 +24,17 @@ int findFallbackMove(GameInfo game) {
 		}
 	}
 
-	//dead end
+	//dead end go into snake BUFFER
+	if (!posmoves.size()) {
+		for (auto m : moveslist) {	
+			Point p = head.addMove(m);
+			if (game.board.getCoord(p) == BUFFER) {
+				posmoves.push_back(m);
+			}
+		}
+	}
+
+	//else we are fucked anyways yolo
 	if (!posmoves.size()) {
 		return 0;
 	}
@@ -114,8 +124,8 @@ string moveResponse(int dir) {
 
 string SnakeInfo() {
 	JSON info;
-	info["color"] = "#FF0000";
-	info["head_url"] = "http://www.matagot.com/IMG/cache-20x20/arton27-20x20.jpg";
+	info["color"] = "#00FF00";
+	info["head_url"] = "http://pets.wilco.org/Portals/7/Containers/Pets2011/images/star.png";
 	info["taunt"] = "Test Taunt";
 	info["name"] = "name";
 	return info.dump();
