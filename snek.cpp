@@ -48,7 +48,7 @@ int orbit(GameInfo game){
 	Point head = game.snake.getHead();
 	Point tail = game.snake.getTail();
 	Path path = game.astarGraphSearch(head, tail);
-	if(path.path.size() > 2){
+	if(path.path.size() > 2 ){
 		return path.getStepDir(0);
 	}
 	return findFallbackMove(game);

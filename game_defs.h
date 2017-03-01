@@ -5,6 +5,7 @@
 #include "crow/amalgamate/crow_all.h"
 #include <assert.h>
 #include <queue>
+#include <stack>
 
 using namespace std;
 using namespace crow;
@@ -214,8 +215,8 @@ bool GameBoard::isVisited(Point p){
 }
 
 void GameBoard::clearVisited(){
-	for(auto vec: visited){
-		fill(vec.begin(), vec.end(), false);
+	for(auto &vec: visited){
+		fill(vec.begin(), vec.end(), 0);
 	}
 }	
 
@@ -265,8 +266,12 @@ GameInfo::GameInfo(string body) {
 	//board.print();
 	getMySnake();
 
-	//vector<Point> deadpoints = fillDeadEnds(snake.getHead());
-	//cout << "DEADPOINTS: " << deadpoints.size() << endl;
+	vector<Point> deadpoints = fillDeadEnds(snake.getHead());
+	cout << "DEADPOINTS: " << deadpoints.size() << endl;
+
+	for(auto p: deadpoints){
+		board.board[p.y][p.x] = WALL;
+	}
 
 
 	assert(!snake.id.compare(id));
@@ -312,26 +317,41 @@ void GameInfo::getMySnake() {
 
 vector<Point> GameInfo::fillDeadEnds(Point start){
 	vector<Point> deadpoints = vector<Point>();
-	queue<Point> q = queue<Point>();
+	stack<Point> st = stack<Point>();
 	Point parent[board.board.size()][board.board[0].size()];
-	int expands[board.board.size()][board.board[0].size()];
+	int valids[board.board.size()][board.board[0].size()];
 
 	Point curpoint = start;
-	q.push(curpoint);
+	st.push(curpoint);
 
 	int depth = 0;
-	while (!q.empty()) {
-		curpoint = q.front();
-		q.pop();
+	while (!st.empty()) {
+		curpoint = st.top();
+		st.pop();
 
 		vector<Point> points = curpoint.expand();
-		expands[curpoint.y][curpoint.x] =  points.size();
+		valids[curpoint.y][curpoint.x] =  0;
 
-		if(points.size() == 0){
+		for (auto point : points) {
+			if(board.isValid(point) || point.compare(snake.getHead()) || point.compare(snake.getTail())){
+				valids[curpoint.y][curpoint.x]++;
+				if (!board.isVisited(point)) {
+					parent[point.y][point.x] = curpoint;
+					st.push(point);
+					board.markVisited(point);
+				}
+			}
+		
+		}
+
+		
+		//cout << valid.size() << endl;
+		if(valids[curpoint.y][curpoint.x] == 1){
 			//dead end
+			//deadpoints.push_back(curpoint);
 			Point dead = parent[curpoint.y][curpoint.x];
 			int loop = 0;
-			while(expands[dead.y][dead.x] == 1){
+			while(valids[dead.y][dead.x] == 2){
 				deadpoints.push_back(dead);
 				dead = parent[dead.y][dead.x];
 				loop++;
@@ -339,15 +359,7 @@ vector<Point> GameInfo::fillDeadEnds(Point start){
 			}
 		}
 
-		for (auto point : points) {
-			if (!board.isVisited(point) && board.isValid(point)) {
-				parent[point.y][point.x] = curpoint;
-				q.push(point);
-				board.markVisited(point);
-			}
 		
-		}
-
 		depth++;
 		//Crash if loop
 		assert(depth < ((height + 2) * (width + 2)));
@@ -504,7 +516,7 @@ Path GameInfo::astarGraphSearch(Point start, Point end){
 
 		closed.push_back(end);
 		loop++;
-		assert(loop < width * height);
+		assert(loop < (width + 2) * (height + 2));
 	}
 
 	return path;
