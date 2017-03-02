@@ -39,7 +39,7 @@ const vector<int> moveslist = {NORTH, SOUTH, EAST, WEST};
 #define ASTARTIMEOUT 50
 
 
-class profile{
+class profile {
 public:
 	const char* fname;
 	int line;
@@ -48,14 +48,14 @@ public:
 	~profile();
 };
 
-profile::profile(const char* fn, int l){
+profile::profile(const char* fn, int l) {
 	t = clock();
 	fname = fn;
 	line = l;
 
 }
 
-profile::~profile(){
+profile::~profile() {
 	cout << fname << " executed in " << ((float) clock() -  t ) / CLOCKS_PER_SEC << endl;
 }
 
@@ -124,6 +124,7 @@ public:
 	Path breadthFirstSearch(Point start, vector<int> targets, bool geq);
 	Path astarGraphSearch(Point start, Point end);
 	vector<Point> fillDeadEnds(Point start);
+	vector<int> lookahead();
 private:
 	int parseMode(string str);
 	void updateBoard();
@@ -136,7 +137,7 @@ GameBoard::GameBoard() {
 	visited = vector<vector<bool>>();
 }
 
-Point::Point(){
+Point::Point() {
 	x = 0;
 	y = 0;
 }
@@ -170,7 +171,7 @@ Point Point::convert() {
 	return Point(x + 1, y + 1);
 }
 
-float Point::distance(Point p){
+float Point::distance(Point p) {
 	return sqrt(pow(x - p.x, 2) + pow(y - p.y, 2));
 }
 
@@ -183,8 +184,7 @@ vector<Point> Point::expand() {
 	return moves;
 }
 
-bool Point::compare(Point b){
-
+bool Point::compare(Point b) {
 	return (x == b.x) && (y == b.y);
 }
 
@@ -231,18 +231,18 @@ void GameBoard::print() {
 	}
 }
 
-void GameBoard::markVisited(Point p){
+void GameBoard::markVisited(Point p) {
 	visited[p.y][p.x] = true;
 }
-bool GameBoard::isVisited(Point p){
+bool GameBoard::isVisited(Point p) {
 	return  visited[p.y][p.x];
 }
 
-void GameBoard::clearVisited(){
-	for(auto &vec: visited){
+void GameBoard::clearVisited() {
+	for (auto &vec : visited) {
 		fill(vec.begin(), vec.end(), 0);
 	}
-}	
+}
 
 Snake::Snake() {
 	coords = vector<Point>();
@@ -262,7 +262,7 @@ Point Snake::getHead() {
 	return coords[0];
 }
 
-Point Snake::getTail(){
+Point Snake::getTail() {
 	assert(coords.size() > 0);
 	return coords.back();
 }
@@ -294,7 +294,7 @@ GameInfo::GameInfo(string body) {
 	vector<Point> deadpoints = fillDeadEnds(snake.getHead());
 	cout << "DEADPOINTS: " << deadpoints.size() << endl;
 
-	for(auto p: deadpoints){
+	for (auto p : deadpoints) {
 		board.board[p.y][p.x] = BUFFER;
 	}
 
@@ -339,23 +339,23 @@ void GameInfo::getMySnake() {
 	}
 }
 
-void GameInfo::addSnakeWall(){
-	for(auto s : snakes){
-		if(s.id.compare(id)){
-			if(s.coords.size() >= snake.coords.size()){
+void GameInfo::addSnakeWall() {
+	for (auto s : snakes) {
+		if (s.id.compare(id)) {
+			if (s.coords.size() >= snake.coords.size()) {
 				vector<Point> exp = s.getHead().expand();
-				for(auto p : exp){
-					if(board.getCoord(p) < 0){
+				for (auto p : exp) {
+					if (board.getCoord(p) < 0) {
 						board.board[p.y][p.x] = BUFFER;
 					}
-				} 
+				}
 			}
 		}
 	}
 }
 
 
-vector<Point> GameInfo::fillDeadEnds(Point start){
+vector<Point> GameInfo::fillDeadEnds(Point start) {
 	profile prof(__FUNCTION__, __LINE__);
 	vector<Point> deadpoints = vector<Point>();
 	queue<Point> q = queue<Point>();
@@ -374,23 +374,23 @@ vector<Point> GameInfo::fillDeadEnds(Point start){
 		valids[curpoint.y][curpoint.x] =  0;
 
 		for (auto point : points) {
-			if(board.isValid(point) || point.compare(snake.getTail())){
+			if (board.isValid(point) || point.compare(snake.getTail())) {
 				valids[curpoint.y][curpoint.x]++;
-				if (!board.isVisited(point) && board.isValid(point)){
+				if (!board.isVisited(point) && board.isValid(point)) {
 					parent[point.y][point.x] = curpoint;
 					q.push(point);
 				}
 			}
 			board.markVisited(point);
 		}
-		
+
 		//cout << valid.size() << endl;
-		if(valids[curpoint.y][curpoint.x] == 1){
+		if (valids[curpoint.y][curpoint.x] == 1) {
 			//dead end
 			//deadpoints.push_back(curpoint);
 			Point dead = parent[curpoint.y][curpoint.x];
 			int loop = 0;
-			while(valids[dead.y][dead.x] == 2){
+			while (valids[dead.y][dead.x] == 2) {
 				deadpoints.push_back(dead);
 				dead = parent[dead.y][dead.x];
 				loop++;
@@ -400,7 +400,7 @@ vector<Point> GameInfo::fillDeadEnds(Point start){
 
 		depth++;
 		//Crash if loop
-		if(depth < ((height + 2) * (width + 2)));
+		if (depth < ((height + 2) * (width + 2)));
 	}
 	board.clearVisited();
 	return deadpoints;
@@ -429,14 +429,14 @@ Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 				q.push(point);
 				board.markVisited(point);
 
-				for(auto target: targets){
+				for (auto target : targets) {
 					if ((!geq && (board.getCoord(point) == target)) || (geq && (board.getCoord(point) >= target))) {
 						Path path = Path();
 						path.target = target;
 
 						int loop = 0;
 						//walk path
-						while(start.x != point.x || start.y != point.y ){
+						while (start.x != point.x || start.y != point.y ) {
 							path.path.insert(path.path.begin(), point);
 							point = parent[point.y][point.x];
 
@@ -449,7 +449,7 @@ Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 					}
 				}
 			}
-		
+
 		}
 
 		depth++;
@@ -461,7 +461,7 @@ Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 }
 
 
-class Node{
+class Node {
 public:
 	vector<Point> path;
 	Point point;
@@ -473,7 +473,7 @@ public:
 	vector<Node> expand(Point target);
 };
 
-Node::Node(){
+Node::Node() {
 	path = vector<Point>();
 	point = Point();
 	f = 0;
@@ -481,7 +481,7 @@ Node::Node(){
 	h = 0;
 }
 
-Node::Node(Point p){
+Node::Node(Point p) {
 	path = vector<Point>();
 	path.push_back(p);
 	point = p;
@@ -491,16 +491,16 @@ Node::Node(Point p){
 }
 
 
-bool compareF(const Node& a, const Node& b){
+bool compareF(const Node& a, const Node& b) {
 	return a.f < b.f;
 }
 
-bool isBetter(vector<Node> vec, Node node){
+bool isBetter(vector<Node> vec, Node node) {
 	bool same = false;
-	for(auto n: vec){
-		if(node.point.compare(n.point)){
+	for (auto n : vec) {
+		if (node.point.compare(n.point)) {
 			same = true;
-			if(node.f < n.f){
+			if (node.f < n.f) {
 				return true;
 			}
 		}
@@ -508,11 +508,10 @@ bool isBetter(vector<Node> vec, Node node){
 	return !same;
 }
 
-
-vector<Node> Node::expand(Point target){
+vector<Node> Node::expand(Point target) {
 	vector<Node> nodes;
 	vector<Point> points = point.expand();
-	for(auto p: points){
+	for (auto p : points) {
 		Node node;
 		node.point = p;
 		node.path = vector<Point>(path);
@@ -525,10 +524,7 @@ vector<Node> Node::expand(Point target){
 	return nodes;
 }
 
-
-
-
-Path GameInfo::astarGraphSearch(Point start, Point end){
+Path GameInfo::astarGraphSearch(Point start, Point end) {
 	profile prof(__FUNCTION__, __LINE__);
 	Path path = Path();
 	Node first = Node(start);
@@ -536,21 +532,21 @@ Path GameInfo::astarGraphSearch(Point start, Point end){
 	vector<Node> closed;
 	open.push_back(first);
 
-	while(!open.empty()){
+	while (!open.empty()) {
 		auto it = min_element(open.begin() , open.end(), compareF);
 		Node best = *it;
 		open.erase(it);
 
 		vector<Node> exp = best.expand(end);
-		for(auto node: exp){
-			if(node.point.compare(end)){
+		for (auto node : exp) {
+			if (node.point.compare(end)) {
 				path.path = node.path;
 				cout << "A* path found and size is " << path.path.size() << endl;
 				return path;
-			}	
+			}
 
-			if(board.isValid(node.point)){
-				if(isBetter(open, node) && isBetter(closed, node)){
+			if (board.isValid(node.point)) {
+				if (isBetter(open, node) && isBetter(closed, node)) {
 					open.push_back(node);
 				}
 			}
@@ -558,39 +554,41 @@ Path GameInfo::astarGraphSearch(Point start, Point end){
 
 		closed.push_back(end);
 
-		///timeout a* 
-		if(((float) clock() - t) / CLOCKS_PER_SEC * 1000 > ASTARTIMEOUT){
+		///timeout a*
+		if (((float) clock() - prof.t) / CLOCKS_PER_SEC * 1000 > ASTARTIMEOUT) {
 			cout << "AStar Timeout" << endl;
 			return Path();
 		}
 	}
-
 	cout << "Astar Did not find a path" << endl;
 
 	return path;
 }
 
+vector<int> GameInfo::lookahead(){
+}
 
-Path::Path(){
+
+Path::Path() {
 	path = vector<Point>();
 	target = EMPTY;
 }
 
-int Path::getStepDir(int step){
+int Path::getStepDir(int step) {
 	assert(step >= 0 && step < path.size() - 1);
 	Point one = path[step];
-	Point two = path[step + 1]; 
+	Point two = path[step + 1];
 
 	int x = two.x - one.x;
 	int y = two.y - one.y;
 
 	assert(x != 0 || y != 0);
 
-	if(y == -1){
+	if (y == -1) {
 		return NORTH;
-	}else if (y == 1){
+	} else if (y == 1) {
 		return SOUTH;
-	}else if (x == 1){
+	} else if (x == 1) {
 		return EAST;
 	}
 

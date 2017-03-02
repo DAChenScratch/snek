@@ -33,8 +33,6 @@ int findFallbackMove(GameInfo game) {
 		}
 	}
 
-
-	/*
 	//dead end go into snake BUFFER
 	if (!posmoves.size()) {
 		cout << "BUFFER" << endl;
@@ -56,7 +54,6 @@ int findFallbackMove(GameInfo game) {
 			}
 		}
 	}
-	*/
 
 	//else we are fucked anyways yolo
 	if (!posmoves.size()) {
@@ -110,7 +107,7 @@ int executeState(GameInfo game, int state) {
 }
 
 int decideState(GameInfo game) {
-	if (game.snake.health < 30) {
+	if (game.snake.health < 80) {
 		return EAT;
 	}
 	if (game.snake.health < 101) {
