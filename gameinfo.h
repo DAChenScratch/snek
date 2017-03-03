@@ -36,8 +36,6 @@ public:
 	void makeSnakeMove(int snake, int move);
 	float evaluate();
 	GameInfo( const GameInfo & obj);
-
-private:
 	int parseMode(string str);
 	void updateBoard();
 	void getMySnake();
@@ -69,6 +67,8 @@ GameInfo::GameInfo( const GameInfo & obj)
 	snake(obj.snake),
 	board(obj.board)
 {
+	assert(board.board.size() == height + 2);
+	assert(board.board[0].size() == width + 2);
 }
 
 
@@ -120,9 +120,7 @@ int GameInfo::parseMode(string str) {
 	return -1;
 }
 
-void GameInfo::updateBoard() {
-	board = GameBoard(width, height);
-
+void GameInfo::updateBoard() { 
 	for (auto p : food) {
 		board.board[p.y][p.x] = FOOD;
 	}
@@ -135,6 +133,7 @@ void GameInfo::updateBoard() {
 		}
 		i++;
 	}
+
 
 
 }
@@ -230,6 +229,8 @@ int GameInfo::getFreeSquares(Point start, int maxdepth){
 	int loop = 0;
 	int free = 0;
 	int depth = 0;
+
+	board.print();
 
 	while (!q.empty() || !swap.empty()) {
 		curpoint = q.front();
@@ -478,22 +479,7 @@ float GameInfo::evaluate(){
 		//bad
 		
 	}*/
-	/*
 
-	//TODO update the board
-	//THERE IS ERROR HERE
-	int i = 0;
-	int h = snakes.size();
-	for (auto snake : snakes) {
-		for (auto p : snake.coords) {
-			if(board.isValid(p)){
-				board.board[p.y][p.x] = i + h;
-			}
-		}
-		i++;
-	}
-
-	*/
 
 	//get avg euclidian distance away from food
 	float food_score = 0;
@@ -514,7 +500,7 @@ float GameInfo::evaluate(){
 	//cout << "Dmove score " << dmove_score << endl;
 
 	//free squares 
-	int free = getFreeSquares(snake.getHead(), FREESQUARESDEPTH);
+	int free = 0; //getFreeSquares(snake.getHead(), FREESQUARESDEPTH);
 
 	//cout << "FreeSquares " << free << endl;
 
@@ -554,8 +540,10 @@ vector<float> GameInfo::lookaheadRec(GameInfo& state, int depth, int maxdepth) {
 	vector<float> vals;
 	for(auto m: moveslist){
 		GameInfo newstate = state;
-
+		newstate.getMySnake();
 		newstate.makeMove(m, index);
+		newstate.updateBoard();
+
 		float val = newstate.evaluate();
 				
 		int sum = 0;
@@ -590,5 +578,5 @@ void benchmark(GameInfo game){
 
 vector<float> GameInfo::lookahead() {
 	profile prof(__FUNCTION__, __LINE__);
-	return lookaheadRec(*this, 0, 5);
+	return lookaheadRec(*this, 0, 1);
 }

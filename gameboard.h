@@ -18,6 +18,7 @@ public:
 	bool isVisited(Point p);
 	void clearVisited();
 	GameBoard( const GameBoard & obj);
+	void clearBoard();
 };
 
 GameBoard::GameBoard(const GameBoard & obj)
@@ -30,24 +31,27 @@ GameBoard::GameBoard() {
 	visited = vector<vector<bool>>();
 }
 
+GameBoard::clearBoard(){
+	for(auto y = board.begin(); y != board.end(); y++)
+		for(auto x = (*y).begin(); x != (*y).end(); x++){
+			if(x == (*y).begin() )
 
+		}
+	}
+		if (i == 0 || i == height + 1 || j == 0 || j == width + 1 ) {
+			tmp.push_back(WALL);
+		} else {
+			tmp.push_back(EMPTY);
+		}
+	}
+
+}
+}
 
 GameBoard::GameBoard(int width, int height) {
-	board = vector<vector<int>>();
-	for (int i = 0; i < height + 2; i++) {
-		vector<int> tmp = vector<int>();
-		vector<bool> vtmp = vector<bool>();
-		for (int j = 0; j < width + 2; j++) {
-			if (i == 0 || i == height + 1 || j == 0 || j == width + 1 ) {
-				tmp.push_back(WALL);
-			} else {
-				tmp.push_back(EMPTY);
-			}
-			vtmp.push_back(false);
-		}
-		board.push_back(tmp);
-		visited.push_back(vtmp);
-	}
+	board = vector<vector<int>>(height + 2)(width + 2);
+	visited = vector<vector<bool>>(height + 2)(width + 2);
+
 }
 int GameBoard::getCoord(Point p) {
 	assert((p.y >= 0) && (p.y <= board.size()));
