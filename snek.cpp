@@ -1,18 +1,13 @@
-#include "crow/amalgamate/crow_all.h"
-#include "json/src/json.hpp"
-#include "game_defs.h"
 #include <iostream>
 #include <string>
 #include <vector>
 #include <cstdlib>
 #include <time.h>
-
-
-
+#include "crow/amalgamate/crow_all.h"
+#include "gameinfo.h"
 
 using namespace std;
 using namespace crow;
-using JSON = nlohmann::json;
 
 
 int findFallbackMove(GameInfo game) {
@@ -66,7 +61,6 @@ int findFallbackMove(GameInfo game) {
 }
 
 int eat(GameInfo game) {
-	cout << "TEST" << endl;
 	Point head = game.snake.getHead();
 	Path path = game.breadthFirstSearch(head, {FOOD}, false);
 
