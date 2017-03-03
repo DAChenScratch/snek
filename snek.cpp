@@ -14,6 +14,7 @@ using namespace std;
 using namespace crow;
 using JSON = nlohmann::json;
 
+
 int findFallbackMove(GameInfo game) {
 	profile prof(__FUNCTION__, __LINE__);
 	cout << "FALL BACK MOVE" << endl;
@@ -65,6 +66,7 @@ int findFallbackMove(GameInfo game) {
 }
 
 int eat(GameInfo game) {
+	cout << "TEST" << endl;
 	Point head = game.snake.getHead();
 	Path path = game.breadthFirstSearch(head, {FOOD}, false);
 
@@ -86,34 +88,28 @@ int orbit(GameInfo game){
 	return findFallbackMove(game);
 }
 
-int executeState(GameInfo game, int state) {
-	switch (state) {
-	case EAT:
-		return eat(game);
-		break;
-	case FINDFOOD:
-		return findFallbackMove(game);
-		break;
+int checkMove(GameInfo game, int move){
 
-	case ORBIT:
-		return orbit(game);
-		break;
 
-	case DEFAULT:
-		return findFallbackMove(game);
-		break;
-	}
-	return findFallbackMove(game);
-}
+	vector<float> vals = game.lookahead();
 
-int decideState(GameInfo game) {
-	if (game.snake.health < 80) {
-		return EAT;
+	int i = 0;
+	for(auto val: vals){
+		cout << " " << val << " ";
 	}
-	if (game.snake.health < 101) {
-		return ORBIT;
-	}
-	return DEFAULT;
+	cout << endl;
+	cout << "size " << vals.size() << endl;
+	cout << "MOVE " << move << endl;
+
+	/*
+	if(vals[move] < 0){
+		cout << "Exec Max Move" << endl;
+		move = distance(vals.begin(), max_element(vals.begin(), vals.end()));
+		cout << "New move " << move << endl;
+		return move;
+	}*/
+
+	return move;
 }
 
 
@@ -139,6 +135,42 @@ string moveResponse(int dir) {
 	}
 	return move.dump();
 }
+
+int executeState(GameInfo game, int state) {
+	int move = 0;
+	switch (state) {
+	case EAT:
+		move = eat(game);
+		return checkMove(game, move);
+		break;
+	case FINDFOOD:
+		return findFallbackMove(game);
+		break;
+
+	case ORBIT:
+		move = orbit(game);
+		return checkMove(game, move);
+		break;
+
+	case DEFAULT:
+		move = findFallbackMove(game);
+		return checkMove(game, move);
+		break;
+	}
+	return findFallbackMove(game);
+}
+
+int decideState(GameInfo game) {
+	if (game.snake.health < 95) {
+		return EAT;
+	}
+	if (game.snake.health < 101) {
+		return ORBIT;
+	}
+	return DEFAULT;
+}
+
+
 
 string SnakeInfo() {
 	JSON info;

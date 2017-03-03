@@ -1,5 +1,5 @@
 default:
-	g++ -std=c++11 snek.cpp -o snek -w -lpthread -lboost_system 
+	g++ -std=c++11 snek.cpp -o snek -w -lpthread -lboost_system -O3
 
 clean:
 	rm ./snek

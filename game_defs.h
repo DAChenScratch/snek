@@ -37,6 +37,7 @@ const vector<int> moveslist = {NORTH, SOUTH, EAST, WEST};
 #define ORBIT 3
 
 #define ASTARTIMEOUT 50
+#define FREESQUARESDEPTH 6
 
 
 class profile {
@@ -70,7 +71,13 @@ public:
 	float distance(Point p);
 	vector<Point> expand();
 	bool compare(Point b);
+	Point(const Point & obj);
 };
+
+Point::Point(const Point & obj)
+	: x(obj.x), y(obj.y)
+{
+}
 
 class Path {
 public:
@@ -79,7 +86,6 @@ public:
 	Path();
 	int getStepDir(int step);
 };
-
 
 class GameBoard {
 public:
@@ -93,8 +99,13 @@ public:
 	void markVisited(Point p);
 	bool isVisited(Point p);
 	void clearVisited();
+	GameBoard( const GameBoard & obj);
 };
 
+GameBoard::GameBoard(const GameBoard & obj)
+	:board(obj.board) , visited(obj.visited)
+{
+}
 
 class Snake {
 public:
@@ -106,10 +117,20 @@ public:
 	Snake(JSON j);
 	Point getHead();
 	Point getTail();
+	Snake(const Snake & obj);
 };
+
+Snake::Snake(const Snake & obj)
+	:id(obj.id),
+	name(obj.name),
+	health(obj.health),
+	coords(obj.coords)
+{
+}
 
 class GameInfo {
 public:
+	int index;
 	string id;
 	string game_id;
 	int turn;
@@ -119,17 +140,54 @@ public:
 	vector<Point> food;
 	Snake snake;
 	GameBoard board;
+	GameInfo();
 	GameInfo(string body);
 	void addSnakeWall();
 	Path breadthFirstSearch(Point start, vector<int> targets, bool geq);
+	int getFreeSquares(Point start, int maxdepth);
 	Path astarGraphSearch(Point start, Point end);
 	vector<Point> fillDeadEnds(Point start);
-	vector<int> lookahead();
+	vector<float> lookahead();
+	vector<float> lookaheadRec(GameInfo& state,  int depth, int maxdepth);
+	void makeMove(int move, int sindex);
+	int defaultMove(int snake);
+	void makeSnakeMove(int snake, int move);
+	float evaluate();
+	GameInfo( const GameInfo & obj);
+
 private:
 	int parseMode(string str);
 	void updateBoard();
 	void getMySnake();
 };
+
+GameInfo::GameInfo(){
+	index = -1;
+	id = "";
+	game_id = "";
+	turn = 0;
+	height = 0;
+	width = 0;
+	snakes = vector<Snake>();
+	food = vector<Point>();
+	snake = Snake();
+	board = GameBoard();
+}
+
+GameInfo::GameInfo( const GameInfo & obj)
+	:index(obj.index),
+	id(obj.id),
+	game_id(obj.game_id),
+	turn(obj.turn),
+	height(obj.height),
+	width(obj.width),
+	snakes(obj.snakes),
+	food(obj.food),
+	snake(obj.snake),
+	board(obj.board)
+{
+}
+
 
 
 GameBoard::GameBoard() {
@@ -314,28 +372,32 @@ int GameInfo::parseMode(string str) {
 
 void GameInfo::updateBoard() {
 	board = GameBoard(width, height);
-	//TODO fix loop
-	int i = 0;
-	for (auto snake : snakes) {
-		int head = snakes.size();
-		for (auto p : snake.coords) {
-			board.board[p.y][p.x] = int(i) + head;
-		}
-		head = 0;
-		i++;
-	}
 
 	for (auto p : food) {
 		board.board[p.y][p.x] = FOOD;
 	}
+
+	int i = 0;
+	int head = snakes.size();
+	for (auto snake : snakes) {
+		for (auto p : snake.coords) {
+			board.board[p.y][p.x] = i + head;
+		}
+		i++;
+	}
+
+
 }
 
 void GameInfo::getMySnake() {
+	int  i = 0;
 	for (auto s : snakes) {
 		if (!s.id.compare(id)) {
 			snake = s;
+			index = i;
 			break;
 		}
+		i++;
 	}
 }
 
@@ -387,7 +449,7 @@ vector<Point> GameInfo::fillDeadEnds(Point start) {
 		//cout << valid.size() << endl;
 		if (valids[curpoint.y][curpoint.x] == 1) {
 			//dead end
-			//deadpoints.push_back(curpoint);
+			deadpoints.push_back(curpoint);
 			Point dead = parent[curpoint.y][curpoint.x];
 			int loop = 0;
 			while (valids[dead.y][dead.x] == 2) {
@@ -404,6 +466,55 @@ vector<Point> GameInfo::fillDeadEnds(Point start) {
 	}
 	board.clearVisited();
 	return deadpoints;
+}
+
+int GameInfo::getFreeSquares(Point start, int maxdepth){
+	queue<Point> q = queue<Point>();
+	queue<Point> swap = queue<Point>();
+
+	vector<vector<Point>> parent(board.board.size(), vector<Point>(board.board[0].size()));
+
+	Point curpoint = start;
+	q.push(curpoint);
+
+	int loop = 0;
+	int free = 0;
+	int depth = 0;
+
+	while (!q.empty() || !swap.empty()) {
+		curpoint = q.front();
+		q.pop();
+
+		vector<Point> points = curpoint.expand();
+		for (auto point : points) {
+			if (!board.isVisited(point) && board.isValid(point)) {
+				parent[point.y][point.x] = curpoint;
+				swap.push(point);
+				board.markVisited(point);
+				free++;
+			}
+		}
+
+		if(q.empty()){
+			queue<Point> temp = q;
+			q = swap;
+			swap = temp;
+			depth++;
+		}
+
+		if(depth >= maxdepth){
+			board.clearVisited();
+			return free;
+		}
+
+
+		loop++;
+		//Crash if loop
+		assert(loop < ((height + 2) * (width + 2)));
+	}
+
+	board.clearVisited();
+	return free;
 }
 
 
@@ -565,9 +676,172 @@ Path GameInfo::astarGraphSearch(Point start, Point end) {
 	return path;
 }
 
-vector<int> GameInfo::lookahead(){
+
+
+int GameInfo::defaultMove(int snake) {
+	Point head = snakes[snake].getHead();
+
+	vector<int> posmoves = vector<int>();
+	for (auto m : moveslist) {
+		Point p = head.addMove(m);
+
+		//if we can move into tail
+		if (p.compare(snakes[snake].getTail()) && snakes[snake].coords.size() > 3) {
+			return m;
+		}
+
+		if (board.isValid(p)) {
+			posmoves.push_back(m);
+		}
+	}
+
+	//else we are fucked anyways yolo
+	if (!posmoves.size()) {
+		return 0;
+	}
+
+	return posmoves[rand() % posmoves.size()];
 }
 
+
+//evalaute our position
+float GameInfo::evaluate(){	
+	Point head = snake.getHead();
+
+	/*
+	//check snake collision
+	int t = board.getCoord(head);
+
+	if(t >= 0){
+		//collision
+		if(snakes[t].getHead().compare(head)){
+			//head on collision
+			if(snake.coords.size() > snakes[t].coords.size()){
+				//good
+
+			}
+		}
+
+	} 
+
+	if(!board.isValid(head)){
+		//bad
+		
+	}*/
+	/*
+
+	//TODO update the board
+	//THERE IS ERROR HERE
+	int i = 0;
+	int h = snakes.size();
+	for (auto snake : snakes) {
+		for (auto p : snake.coords) {
+			if(board.isValid(p)){
+				board.board[p.y][p.x] = i + h;
+			}
+		}
+		i++;
+	}
+
+	*/
+
+	//get avg euclidian distance away from food
+	float food_score = 0;
+	for(auto fp: food){
+		food_score += fp.distance(snake.getHead());
+	}
+	food_score /= food.size();
+	//cout << "Food score " << food_score << endl;
+
+	//amount of direct free moves
+	float dmove_score = 0;
+	for(auto m: moveslist){
+		Point p = snake.getHead().addMove(m);
+		if(board.isValid(p)){
+			dmove_score++;
+		}
+	}
+	//cout << "Dmove score " << dmove_score << endl;
+
+	//free squares 
+	int free = getFreeSquares(snake.getHead(), FREESQUARESDEPTH);
+
+	//cout << "FreeSquares " << free << endl;
+
+	if(dmove_score == 0){
+		return -75.0;
+	}
+
+	return dmove_score * 10 + (30 - food_score) + (free);
+}
+
+void GameInfo::makeSnakeMove(int snake, int move) {
+	assert(snake  < snakes.size());
+	if (move < 0) {
+		move = defaultMove(snake);
+	}
+	Point nhead = snakes[snake].getHead().addMove(move);
+	snakes[snake].coords.insert(snakes[snake].coords.begin(), nhead);
+	snakes[snake].coords.pop_back();
+}
+
+
+void GameInfo::makeMove(int move, int sindex) {
+	assert(move >= 0 && move <= 3);
+	int i = 0;
+
+	for (auto s : snakes) {
+		if (i == sindex) {
+			makeSnakeMove(sindex, move);
+		}else{
+			makeSnakeMove(i, -1);
+		}
+		i++;
+	}
+}
+
+vector<float> GameInfo::lookaheadRec(GameInfo& state, int depth, int maxdepth) {
+	vector<float> vals;
+	for(auto m: moveslist){
+		GameInfo newstate = state;
+
+		newstate.makeMove(m, index);
+		float val = newstate.evaluate();
+				
+		int sum = 0;
+
+		//Pruning
+		if(depth < maxdepth && val > 0){		
+			vector<float> add = lookaheadRec(newstate, depth + 1, maxdepth);
+			for(auto a: add){
+				sum += a;
+			}
+		}
+
+		vals.push_back(val + sum);			
+	}
+
+	return vals;
+}
+
+
+void benchmark(GameInfo game){
+	profile prof(__FUNCTION__, __LINE__);
+	vector<GameInfo> states;
+
+	while(states.size() < 4000){
+		for(auto m: moveslist){
+			GameInfo newstate = game;
+			newstate.makeMove(m, 0);
+			states.push_back(newstate);
+		}
+	}
+}
+
+vector<float> GameInfo::lookahead() {
+	profile prof(__FUNCTION__, __LINE__);
+	return lookaheadRec(*this, 0, 5);
+}
 
 Path::Path() {
 	path = vector<Point>();
