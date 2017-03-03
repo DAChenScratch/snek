@@ -83,8 +83,7 @@ int orbit(GameInfo game){
 }
 
 int checkMove(GameInfo game, int move){
-
-
+	/*
 	vector<float> vals = game.lookahead();
 
 	int i = 0;
@@ -94,7 +93,7 @@ int checkMove(GameInfo game, int move){
 	cout << endl;
 	cout << "size " << vals.size() << endl;
 	cout << "MOVE " << move << endl;
-
+	*/
 	/*
 	if(vals[move] < 0){
 		cout << "Exec Max Move" << endl;
@@ -155,7 +154,7 @@ int executeState(GameInfo game, int state) {
 }
 
 int decideState(GameInfo game) {
-	if (game.snake.health < 95) {
+	if (game.snake.health < 50) {
 		return EAT;
 	}
 	if (game.snake.health < 101) {

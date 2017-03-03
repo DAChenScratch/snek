@@ -80,6 +80,7 @@ GameInfo::GameInfo(string body) {
 	turn = j["turn"];
 	height = j["height"];
 	width = j["width"];
+	board = GameBoard(width, height);
 
 	snakes = vector<Snake>();
 	for (auto snake : j["snakes"]) {

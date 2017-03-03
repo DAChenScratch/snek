@@ -31,28 +31,24 @@ GameBoard::GameBoard() {
 	visited = vector<vector<bool>>();
 }
 
-GameBoard::clearBoard(){
-	for(auto y = board.begin(); y != board.end(); y++)
+void GameBoard::clearBoard(){
+	for(auto y = board.begin(); y != board.end(); y++){
 		for(auto x = (*y).begin(); x != (*y).end(); x++){
-			if(x == (*y).begin() )
-
+			if(x == (*y).begin() || x == (*y).end() - 1 || y == board.begin() || y == board.end() - 1){
+				*x = WALL;
+			}else{
+				*x = EMPTY;
+			}
 		}
 	}
-		if (i == 0 || i == height + 1 || j == 0 || j == width + 1 ) {
-			tmp.push_back(WALL);
-		} else {
-			tmp.push_back(EMPTY);
-		}
-	}
-
-}
 }
 
 GameBoard::GameBoard(int width, int height) {
-	board = vector<vector<int>>(height + 2)(width + 2);
-	visited = vector<vector<bool>>(height + 2)(width + 2);
-
+	board = vector<vector<int>>(height + 2,  vector<int>(width + 2));
+	visited = vector<vector<bool>>(height + 2, vector<bool>(width + 2));
+	clearBoard();
 }
+
 int GameBoard::getCoord(Point p) {
 	assert((p.y >= 0) && (p.y <= board.size()));
 	assert((p.x >= 0) && (p.x <= board[p.y].size()));
