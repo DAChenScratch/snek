@@ -26,11 +26,6 @@ const vector<int> moveslist = {NORTH, SOUTH, EAST, WEST};
 #define GOLD -4
 #define BUFFER -5
 
-#define DEFAULT 0
-#define EAT 1
-#define FINDFOOD 2
-#define ORBIT 3
-
 #define ASTARTIMEOUT 50
 #define FREESQUARESDEPTH 6
 

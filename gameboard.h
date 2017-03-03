@@ -19,7 +19,13 @@ public:
 	void clearVisited();
 	GameBoard( const GameBoard & obj);
 	void clearBoard();
+	~GameBoard();
 };
+
+GameBoard::~GameBoard(){
+	board.clear();
+	visited.clear();
+}
 
 GameBoard::GameBoard(const GameBoard & obj)
 	:board(obj.board) , visited(obj.visited)
@@ -27,14 +33,12 @@ GameBoard::GameBoard(const GameBoard & obj)
 }
 
 GameBoard::GameBoard() {
-	board = vector<vector<int>>();
-	visited = vector<vector<bool>>();
 }
 
 void GameBoard::clearBoard(){
 	for(auto y = board.begin(); y != board.end(); y++){
-		for(auto x = (*y).begin(); x != (*y).end(); x++){
-			if(x == (*y).begin() || x == (*y).end() - 1 || y == board.begin() || y == board.end() - 1){
+		for(auto x = y->begin(); x != y->end(); x++){
+			if(x == y->begin() || x == y->end() - 1 || y == board.begin() || y == board.end() - 1){
 				*x = WALL;
 			}else{
 				*x = EMPTY;
@@ -44,8 +48,12 @@ void GameBoard::clearBoard(){
 }
 
 GameBoard::GameBoard(int width, int height) {
-	board = vector<vector<int>>(height + 2,  vector<int>(width + 2));
-	visited = vector<vector<bool>>(height + 2, vector<bool>(width + 2));
+	board.resize(height + 2);
+	visited.resize(height + 2);
+	for(int i = 0; i < height + 2; i++){
+		board[i].resize(width + 2);
+		visited[i].resize(width + 2);
+	}
 	clearBoard();
 }
 
@@ -56,10 +64,10 @@ int GameBoard::getCoord(Point p) {
 }
 
 bool GameBoard::isValid(Point p) {
-	if (!((p.y >= 0) && (p.y <= board.size() ))) {
+	if (!((p.y >= 0) && (p.y < board.size() ))) {
 		return false;
 	}
-	if (!((p.x >= 0) && (p.x <= board[p.y].size()))) {
+	if (!((p.x >= 0) && (p.x < board[p.y].size()))) {
 		return false;
 	}
 	return board[p.y][p.x] != WALL && board[p.y][p.x] != BUFFER && board[p.y][p.x] < 0;

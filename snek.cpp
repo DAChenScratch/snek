@@ -53,22 +53,16 @@ int findFallbackMove(GameInfo game) {
 
 	//else we are fucked anyways yolo
 	if (!posmoves.size()) {
-		cout << "WE FUCKED" << endl;
 		return 0;
 	}
 
 	return posmoves[rand() % posmoves.size()];
 }
 
-int eat(GameInfo game) {
-	Point head = game.snake.getHead();
-	Path path = game.breadthFirstSearch(head, {FOOD}, false);
-
-	// found path
+int eat(GameInfo game, Path path) {
 	if (path.path.size() > 1){
 		return path.getStepDir(0);
 	}
-
 	return findFallbackMove(game);
 }
 
@@ -82,28 +76,12 @@ int orbit(GameInfo game){
 	return findFallbackMove(game);
 }
 
-int checkMove(GameInfo game, int move){
-	/*
-	vector<float> vals = game.lookahead();
-
-	int i = 0;
-	for(auto val: vals){
-		cout << " " << val << " ";
-	}
-	cout << endl;
-	cout << "size " << vals.size() << endl;
-	cout << "MOVE " << move << endl;
-	*/
-	/*
-	if(vals[move] < 0){
-		cout << "Exec Max Move" << endl;
-		move = distance(vals.begin(), max_element(vals.begin(), vals.end()));
-		cout << "New move " << move << endl;
-		return move;
-	}*/
-
-	return move;
+Path findPathToNearestFood(GameInfo game){
+	Point head = game.snake.getHead();
+	Path path = game.breadthFirstSearch(head, {FOOD}, false);
+	return path;
 }
+
 
 
 string moveResponse(int dir) {
@@ -129,38 +107,30 @@ string moveResponse(int dir) {
 	return move.dump();
 }
 
-int executeState(GameInfo game, int state) {
-	int move = 0;
-	switch (state) {
-	case EAT:
-		move = eat(game);
-		return checkMove(game, move);
-		break;
-	case FINDFOOD:
-		return findFallbackMove(game);
-		break;
+int decideExcecute(GameInfo game) {
+	profile prof(__FUNCTION__, __LINE__);
 
-	case ORBIT:
-		move = orbit(game);
-		return checkMove(game, move);
-		break;
+	Path foodpath = findPathToNearestFood(game);
+	int fsize = foodpath.path.size();
+	int ssize = game.snake.coords.size();
 
-	case DEFAULT:
-		move = findFallbackMove(game);
-		return checkMove(game, move);
-		break;
+	if(ssize < 10){
+		if (game.snake.health < (fsize + 7)) {
+			return eat(game, foodpath);
+		}
+		if (fsize > ssize + 5 ){
+			return eat(game, foodpath);
+		}
+		return orbit(game);
+	}else{
+		if(game.snake.health < 30){
+			return eat(game, foodpath);
+		}else{
+			return orbit(game);
+		}
 	}
-	return findFallbackMove(game);
-}
-
-int decideState(GameInfo game) {
-	if (game.snake.health < 50) {
-		return EAT;
-	}
-	if (game.snake.health < 101) {
-		return ORBIT;
-	}
-	return DEFAULT;
+	
+	return orbit(game);
 }
 
 
@@ -194,12 +164,8 @@ SimpleApp initSnakeApp() {
 	CROW_ROUTE(app, "/move")
 	.methods("POST"_method)
 	([](const crow::request & req) {
-		clock_t t = clock();
 		GameInfo game = GameInfo(req.body);
-		int state = decideState(game);
-		int move =  executeState(game, state);
-		t = clock() - t;
-		cout << "Exec Move Time: " << ((float) t ) / CLOCKS_PER_SEC << endl; 
+		int move =  decideExcecute(game);
 		return moveResponse(move);
 	});
 

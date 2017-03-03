@@ -130,7 +130,7 @@ void GameInfo::updateBoard() {
 	int head = snakes.size();
 	for (auto snake : snakes) {
 		for (auto p : snake.coords) {
-			board.board[p.y][p.x] = i + head;
+			board.board[p.y][p.x] = i;
 		}
 		i++;
 	}
@@ -429,6 +429,7 @@ Path GameInfo::astarGraphSearch(Point start, Point end) {
 }
 
 
+/*
 
 int GameInfo::defaultMove(int snake) {
 	Point head = snakes[snake].getHead();
@@ -456,11 +457,12 @@ int GameInfo::defaultMove(int snake) {
 }
 
 
+
 //evalaute our position
 float GameInfo::evaluate(){	
 	Point head = snake.getHead();
 
-	/*
+
 	//check snake collision
 	int t = board.getCoord(head);
 
@@ -479,7 +481,7 @@ float GameInfo::evaluate(){
 	if(!board.isValid(head)){
 		//bad
 		
-	}*/
+	}
 
 
 	//get avg euclidian distance away from food
@@ -511,6 +513,7 @@ float GameInfo::evaluate(){
 
 	return dmove_score * 10 + (30 - food_score) + (free);
 }
+
 
 void GameInfo::makeSnakeMove(int snake, int move) {
 	assert(snake  < snakes.size());
@@ -544,9 +547,11 @@ vector<float> GameInfo::lookaheadRec(GameInfo& state, int depth, int maxdepth) {
 		newstate.getMySnake();
 		newstate.makeMove(m, index);
 		newstate.updateBoard();
-
+		newstate.board.print();
+	
 		float val = newstate.evaluate();
-				
+
+		float val = 1.0;		
 		int sum = 0;
 
 		//Pruning
@@ -579,5 +584,6 @@ void benchmark(GameInfo game){
 
 vector<float> GameInfo::lookahead() {
 	profile prof(__FUNCTION__, __LINE__);
-	return lookaheadRec(*this, 0, 1);
+	return lookaheadRec(*this, 0, 5);
 }
+*/
