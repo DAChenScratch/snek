@@ -231,8 +231,6 @@ int GameInfo::getFreeSquares(Point start, int maxdepth){
 	int free = 0;
 	int depth = 0;
 
-	board.print();
-
 	while (!q.empty() || !swap.empty()) {
 		curpoint = q.front();
 		q.pop();

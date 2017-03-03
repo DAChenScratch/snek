@@ -64,10 +64,10 @@ int GameBoard::getCoord(Point p) {
 }
 
 bool GameBoard::isValid(Point p) {
-	if (!((p.y >= 0) && (p.y < board.size() ))) {
+	if (!((p.y >= 0) && (p.y <= board.size() ))) {
 		return false;
 	}
-	if (!((p.x >= 0) && (p.x < board[p.y].size()))) {
+	if (!((p.x >= 0) && (p.x <= board[p.y].size()))) {
 		return false;
 	}
 	return board[p.y][p.x] != WALL && board[p.y][p.x] != BUFFER && board[p.y][p.x] < 0;

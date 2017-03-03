@@ -18,7 +18,6 @@ int findFallbackMove(GameInfo game) {
 	vector<int> posmoves = vector<int>();
 	for (auto m : moveslist) {
 		Point p = head.addMove(m);
-
 		//if we can move into tail
 		if(p.compare(game.snake.getTail()) && game.snake.coords.size() > 3){
 			return m;
@@ -107,6 +106,9 @@ string moveResponse(int dir) {
 	return move.dump();
 }
 
+
+
+
 int decideExcecute(GameInfo game) {
 	profile prof(__FUNCTION__, __LINE__);
 
@@ -114,21 +116,20 @@ int decideExcecute(GameInfo game) {
 	int fsize = foodpath.path.size();
 	int ssize = game.snake.coords.size();
 
-	if(ssize < 10){
-		if (game.snake.health < (fsize + 7)) {
-			return eat(game, foodpath);
-		}
-		if (fsize > ssize + 5 ){
-			return eat(game, foodpath);
-		}
-		return orbit(game);
-	}else{
-		if(game.snake.health < 30){
-			return eat(game, foodpath);
-		}else{
-			return orbit(game);
-		}
+	int buffer = 10;
+	if(ssize > 12){
+		buffer = 20;
 	}
+
+
+	if (game.snake.health < (fsize + buffer)) {
+		return eat(game, foodpath);
+	}
+	if (fsize > ssize){
+		return eat(game, foodpath);
+	}
+	return orbit(game);
+	
 	
 	return orbit(game);
 }
@@ -139,8 +140,8 @@ string SnakeInfo() {
 	JSON info;
 	info["color"] = "#00FF00";
 	info["head_url"] = "http://pets.wilco.org/Portals/7/Containers/Pets2011/images/star.png";
-	info["taunt"] = "Test Taunt";
-	info["name"] = "name";
+	info["taunt"] = "C++ is a superior language";
+	info["name"] = "1MS Masterrace";
 	return info.dump();
 }
 
