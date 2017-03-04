@@ -12,7 +12,6 @@ public:
 	GameBoard();
 	GameBoard(int width, int height);
 	int getCoord(Point p);
-	bool isValid(Point p);
 	void print();
 	void markVisited(Point p);
 	bool isVisited(Point p);
@@ -61,16 +60,6 @@ int GameBoard::getCoord(Point p) {
 	assert((p.y >= 0) && (p.y <= board.size()));
 	assert((p.x >= 0) && (p.x <= board[p.y].size()));
 	return board[p.y][p.x];
-}
-
-bool GameBoard::isValid(Point p) {
-	if (!((p.y >= 0) && (p.y <= board.size() ))) {
-		return false;
-	}
-	if (!((p.x >= 0) && (p.x <= board[p.y].size()))) {
-		return false;
-	}
-	return board[p.y][p.x] != WALL && board[p.y][p.x] != BUFFER && board[p.y][p.x] < 0;
 }
 
 void GameBoard::print() {

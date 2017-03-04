@@ -23,7 +23,7 @@ int findFallbackMove(GameInfo game) {
 			return m;
 		}
 
-		if (game.board.isValid(p)) {
+		if (game.isValid(p)) {
 			posmoves.push_back(m);
 		}
 	}
@@ -111,6 +111,11 @@ string moveResponse(int dir) {
 
 int decideExcecute(GameInfo game) {
 	profile prof(__FUNCTION__, __LINE__);
+
+
+	int free = game.getFreeSquares(game.snake.getHead(), 10);
+	cout << "Free Squares " << free << endl;
+
 
 	Path foodpath = findPathToNearestFood(game);
 	int fsize = foodpath.path.size();

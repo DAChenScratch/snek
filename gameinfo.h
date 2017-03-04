@@ -39,6 +39,7 @@ public:
 	int parseMode(string str);
 	void updateBoard();
 	void getMySnake();
+	bool isValid(Point p);
 	Point getOrbitTarget();
 };
 
@@ -102,15 +103,25 @@ GameInfo::GameInfo(string body) {
 	vector<Point> deadpoints = fillDeadEnds(snake.getHead());
 	cout << "DEADPOINTS: " << deadpoints.size() << endl;
 
+	/*
 	for (auto p : deadpoints) {
 		board.board[p.y][p.x] = BUFFER;
 	}
+	*/
 
 	//board.print();
 	assert(!snake.id.compare(id));
 }
 
-
+bool GameInfo::isValid(Point p){
+	if (!((p.y >= 0) && (p.y < board.board.size()))) {
+		return false;
+	}
+	if (!((p.x >= 0) && (p.x < board.board[p.y].size()))) {
+		return false;
+	}
+	return board.board[p.y][p.x] != WALL && board.board[p.y][p.x] != BUFFER && board.board[p.y][p.x] < 0;
+}
 
 int GameInfo::parseMode(string str) {
 	if (!str.compare("classic")) {
@@ -153,13 +164,13 @@ Point GameInfo::getOrbitTarget(){
 	assert(snake.coords.size() >= 2);
 	Point tail = snake.getTail();
 	Point next = snake.coords.end()[-2];
-	int dx = (tail.x - next.x);
-	int dy = (tail.y - next.y);
+	int dx = (tail.x - next.x) * 2;
+	int dy = (tail.y - next.y) * 2;
 
  	tail.x += dx;
 	tail.y += dy;
 
-	if(board.isValid(tail)){
+	if(isValid(tail)){
 		return tail;
 	}
 
@@ -202,9 +213,9 @@ vector<Point> GameInfo::fillDeadEnds(Point start) {
 		valids[curpoint.y][curpoint.x] =  0;
 
 		for (auto point : points) {
-			if (board.isValid(point) || point.compare(snake.getTail())) {
+			if (isValid(point) || point.compare(snake.getTail())) {
 				valids[curpoint.y][curpoint.x]++;
-				if (!board.isVisited(point) && board.isValid(point)) {
+				if (!board.isVisited(point) && isValid(point)) {
 					parent[point.y][point.x] = curpoint;
 					q.push(point);
 				}
@@ -253,7 +264,7 @@ int GameInfo::getFreeSquares(Point start, int maxdepth){
 
 		vector<Point> points = curpoint.expand();
 		for (auto point : points) {
-			if (!board.isVisited(point) && board.isValid(point)) {
+			if (!board.isVisited(point) && isValid(point)) {
 				parent[point.y][point.x] = curpoint;
 				swap.push(point);
 				board.markVisited(point);
@@ -301,7 +312,7 @@ Path GameInfo::breadthFirstSearch(Point start, vector<int> targets, bool geq) {
 
 		vector<Point> points = curpoint.expand();
 		for (auto point : points) {
-			if (!board.isVisited(point) && board.isValid(point)) {
+			if (!board.isVisited(point) && isValid(point)) {
 				parent[point.y][point.x] = curpoint;
 				q.push(point);
 				board.markVisited(point);
@@ -422,7 +433,7 @@ Path GameInfo::astarGraphSearch(Point start, Point end) {
 				return path;
 			}
 
-			if (board.isValid(node.point)) {
+			if (isValid(node.point)) {
 				if (isBetter(open, node) && isBetter(closed, node)) {
 					open.push_back(node);
 				}
