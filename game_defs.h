@@ -26,7 +26,7 @@ const vector<int> moveslist = {NORTH, SOUTH, EAST, WEST};
 #define GOLD -4
 #define BUFFER -5
 
-#define ASTARTIMEOUT 50
+#define ASTARTIMEOUT 15
 #define FREESQUARESDEPTH 6
 
 

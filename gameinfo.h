@@ -167,15 +167,15 @@ Point GameInfo::getOrbitTarget(){
 	int dx = (tail.x - next.x) * 2;
 	int dy = (tail.y - next.y) * 2;
 
- 	tail.x += dx;
-	tail.y += dy;
+	Point t = tail;
+ 	t.x += dx;
+	t.y += dy;
 
-	if(isValid(tail)){
-		return tail;
+	if(isValid(t)){
+		return t;
 	}
 
-	//TODO maybe return diff point?
-	return Point(0,0);	
+	return tail;	
 }
 
 void GameInfo::addSnakeWall() {
@@ -185,7 +185,7 @@ void GameInfo::addSnakeWall() {
 				vector<Point> exp = s.getHead().expand();
 				for (auto p : exp) {
 					if (board.getCoord(p) < 0) {
-						board.board[p.y][p.x] = BUFFER;
+						board.board[p.y][p.x] = WALL;
 					}
 				}
 			}
