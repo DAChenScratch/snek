@@ -67,8 +67,8 @@ int eat(GameInfo game, Path path) {
 
 int orbit(GameInfo game){
 	Point head = game.snake.getHead();
-	Point tail = game.snake.getTail();
-	Path path = game.astarGraphSearch(head, tail);
+	Point target = game.getOrbitTarget();
+	Path path = game.astarGraphSearch(head, target);
 	if(path.path.size() > 1 && game.snake.coords.size() > 3){
 		return path.getStepDir(0);
 	}
@@ -121,15 +121,12 @@ int decideExcecute(GameInfo game) {
 		buffer = 20;
 	}
 
-
 	if (game.snake.health < (fsize + buffer)) {
 		return eat(game, foodpath);
 	}
 	if (fsize > ssize){
 		return eat(game, foodpath);
 	}
-	return orbit(game);
-	
 	
 	return orbit(game);
 }
@@ -138,7 +135,7 @@ int decideExcecute(GameInfo game) {
 
 string SnakeInfo() {
 	JSON info;
-	info["color"] = "#00FF00";
+	info["color"] = "#000F00";
 	info["head_url"] = "http://pets.wilco.org/Portals/7/Containers/Pets2011/images/star.png";
 	info["taunt"] = "C++ is a superior language";
 	info["name"] = "1MS Masterrace";

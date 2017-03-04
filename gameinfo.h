@@ -39,6 +39,7 @@ public:
 	int parseMode(string str);
 	void updateBoard();
 	void getMySnake();
+	Point getOrbitTarget();
 };
 
 
@@ -134,9 +135,6 @@ void GameInfo::updateBoard() {
 		}
 		i++;
 	}
-
-
-
 }
 
 void GameInfo::getMySnake() {
@@ -149,6 +147,24 @@ void GameInfo::getMySnake() {
 		}
 		i++;
 	}
+}
+
+Point GameInfo::getOrbitTarget(){
+	assert(snake.coords.size() >= 2);
+	Point tail = snake.getTail();
+	Point next = snake.coords.end()[-2];
+	int dx = (tail.x - next.x);
+	int dy = (tail.y - next.y);
+
+ 	tail.x += dx;
+	tail.y += dy;
+
+	if(board.isValid(tail)){
+		return tail;
+	}
+
+	//TODO maybe return diff point?
+	return Point(0,0);	
 }
 
 void GameInfo::addSnakeWall() {
