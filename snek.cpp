@@ -16,6 +16,7 @@ int findFallbackMove(GameInfo game) {
 	Point head = game.snake.getHead();
 
 	vector<int> posmoves = vector<int>();
+	vector<int> freevec = vector<int>();
 	for (auto m : moveslist) {
 		Point p = head.addMove(m);
 		//if we can move into tail
@@ -23,8 +24,13 @@ int findFallbackMove(GameInfo game) {
 			return m;
 		}
 
+
+		int free = game.getFreeSquares(head, 7);
+
+
 		if (game.isValid(p)) {
 			posmoves.push_back(m);
+			freevec.push_back(free);
 		}
 	}
 
@@ -55,7 +61,9 @@ int findFallbackMove(GameInfo game) {
 		return 0;
 	}
 
-	return posmoves[rand() % posmoves.size()];
+
+
+	return posmoves[distance(freevec.begin(), max_element(freevec.begin(),  freevec.end()) )];
 }
 
 int eat(GameInfo game, Path path) {
@@ -157,17 +165,17 @@ int decideExcecute(GameInfo game) {
 
 	int buffer = 10;
 	if (ssize > 12) {
-		buffer = 20;
+		buffer = 35;
 	}
 
-	/*
+	
 	if (isClose(game, foodpath.getLast(), fsize, 5)){
 		cout << "IS CLOSE EAT" << endl;
 		return eat(game, foodpath);
 	}
-	*/
+	
 
-	if(game.snake.coords.size() < 15){
+	if(game.snake.coords.size() < 10){
 		return eat(game, foodpath);
 	}
 
