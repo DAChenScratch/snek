@@ -133,8 +133,8 @@ Path findGoodFood(GameInfo game, int radius){
 
 }*/
 
-bool isClose(Point point, int psize, int radius){
-	for(auto snake: snakes){
+bool isClose(GameInfo game, Point point, int psize, int radius){
+	for(auto snake: game.snakes){
 		if(snake.id.compare(game.snake.id)){
 			if(snake.getHead().manDist(point) <= radius){
 				return true;
@@ -160,6 +160,17 @@ int decideExcecute(GameInfo game) {
 		buffer = 20;
 	}
 
+	/*
+	if (isClose(game, foodpath.getLast(), fsize, 5)){
+		cout << "IS CLOSE EAT" << endl;
+		return eat(game, foodpath);
+	}
+	*/
+
+	if(game.snake.coords.size() < 15){
+		return eat(game, foodpath);
+	}
+
 	if (game.snake.health < (fsize + buffer)) {
 		return eat(game, foodpath);
 	}
@@ -177,7 +188,7 @@ string SnakeInfo() {
 	info["color"] = "#000F00";
 	info["head_url"] = "http://pets.wilco.org/Portals/7/Containers/Pets2011/images/star.png";
 	info["taunt"] = "C++ is a superior language";
-	info["name"] = "1MS Masterrace";
+	info["name"] = "leks";
 	return info.dump();
 }
 

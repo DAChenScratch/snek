@@ -12,7 +12,12 @@ public:
 	int target;
 	Path();
 	int getStepDir(int step);
+	Point getLast();
 };
+
+Point Path::getLast(){
+	return path.back();
+}
 
 
 Path::Path() {
