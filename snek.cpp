@@ -56,7 +56,7 @@ int findFallbackMove(GameInfo game) {
 		}
 	}
 
-	//else we are fucked anyways yolo
+	//its over
 	if (!posmoves.size()) {
 		return 0;
 	}
