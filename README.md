@@ -14,8 +14,7 @@ You will only need to install Boost the others will be handled by git submodules
 `git submodule init` <br />
 `git submodule sync` <br />
 `git submodule update`  <br />
-
-`make`
+`make`  <br />
 
 ##Strategy##
 I chose to use C++ so that I could get the most out of the 200ms execution time. For the web server I selected Crow, a C++ web microframework that was inspired by Flask. Lightweight, fast, and simple to use, it was perfect for this project. For JSON parsing I went with JSON for Modern C++ which has a very familiar syntax.
