@@ -1,1 +1,1 @@
-# snek
+# C++ Snek
