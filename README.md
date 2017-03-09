@@ -2,15 +2,19 @@
 
 ##Dependencies##
 Boost C++ http://www.boost.org/
+
 Crow https://github.com/ipkn/crow
+
 JSON for Modern C++ https://github.com/nlohmann/json
 
-
 ##Compiling##
-'git submodule init'
-'git submodule sync'
-'git submodule update'
-'make'
+`git submodule init`
+
+`git submodule sync`
+
+`git submodule update`
+
+`make`
 
 ##Strategy##
 I chose to use C++ so that I could get the most out of the 200ms execution time. For the web server I selected Crow, a C++ web microframework that was inspired by Flask. Lightweight, fast, and simple to use, it was perfect for this project. For JSON parsing I went with JSON for Modern C++ which has a very familiar syntax.
