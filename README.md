@@ -1,4 +1,5 @@
 # C++ Snek
+Blogpost: https://rdbrck.com/2017/03/slithering-success-battlesnake-2017/
 
 ##Dependencies##
 Boost C++ http://www.boost.org/
