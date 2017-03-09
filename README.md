@@ -9,11 +9,11 @@ Crow https://github.com/ipkn/crow
 JSON for Modern C++ https://github.com/nlohmann/json
 
 ##Compiling##
-`git submodule init`
+You will only need to install Boost the others will be handled by git submodules.
 
-`git submodule sync`
-
-`git submodule update`
+`git submodule init` <br />
+`git submodule sync` <br />
+`git submodule update`  <br />
 
 `make`
 
